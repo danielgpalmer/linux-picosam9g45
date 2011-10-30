@@ -407,6 +407,11 @@ config MACH_AT91SAM9M10G45EK
 	  "ES" at the end of the name means that this board is an
 	  Engineering Sample.
 
+config MACH_PICOSAM9G45
+	bool "Mini-Box.com pico-SAM9G45"
+	help
+	  Select this if you are using Mini-Box.com's pico-SAM9G45
+
 endif
 
 # ----------------------------------------------------------
