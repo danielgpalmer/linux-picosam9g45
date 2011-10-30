@@ -23,10 +23,12 @@
 
 #include <mach/hardware.h>
 
+#warning "here"
+
 #ifdef CONFIG_MACH_PICOSAM9G45
-
+#warning "Memory config for pciosam"
 #ifdef CONFIG_SPARSEMEM
-
+#warning "Sparse mem"
 /*
  * Sparsemem definitions for pico-SAM9G45
  *
@@ -49,7 +51,7 @@
 /* bank page offsets */
 #define PAGE_OFFSET_HIGHBANK  (PAGE_OFFSET + BANKSIZE)
 
- #define __phys_to_virt(p)   \
+#define __phys_to_virt(p)   \
             (((p) & 0x07ffffff) + (((p) & 0x40000000) ? PAGE_OFFSET_HIGHBANK : PAGE_OFFSET))
 
 #define __virt_to_phys(v)   \
