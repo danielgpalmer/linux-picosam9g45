@@ -23,12 +23,8 @@
 
 #include <mach/hardware.h>
 
-#warning "here"
-
 #ifdef CONFIG_MACH_PICOSAM9G45
-#warning "Memory config for pciosam"
 #ifdef CONFIG_SPARSEMEM
-#warning "Sparse mem"
 /*
  * Sparsemem definitions for pico-SAM9G45
  *
@@ -57,7 +53,10 @@
 #define __virt_to_phys(v)   \
             (((v) & 0x07ffffff) + (((v) & 0x08000000) ? BANK2 : BANK1 ))
 
+#else
+	#error The pico-sam9g45 requires sparsemem
 #endif        /* CONFIG_SPARSEMEM */
+
 #endif /* CONFIG_MACH_PICOSAM9G45 */
 
 #endif

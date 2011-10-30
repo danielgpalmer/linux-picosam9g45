@@ -409,6 +409,7 @@ config MACH_AT91SAM9M10G45EK
 
 config MACH_PICOSAM9G45
 	bool "Mini-Box.com pico-SAM9G45"
+	select NEED_MACH_MEMORY_H 
 	help
 	  Select this if you are using Mini-Box.com's pico-SAM9G45
 
