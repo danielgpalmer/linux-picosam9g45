@@ -11,7 +11,6 @@
 
 #include <linux/clk.h>
 #include <linux/errno.h>
-#include <linux/gpio.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/debugfs.h>
@@ -23,6 +22,9 @@
 
 #include <mach/hardware.h>
 #include <mach/at91_pio.h>
+#include <mach/gpio.h>
+
+#include <asm/gpio.h>
 
 #include "generic.h"
 
@@ -614,8 +616,12 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 
 		at91_gpio->bank = &data[i];
 		at91_gpio->chip.base = PIN_BASE + i * 32;
-		at91_gpio->regbase = at91_gpio->bank->offset +
-			(void __iomem *)AT91_VA_BASE_SYS;
+
+		at91_gpio->regbase = ioremap(at91_gpio->bank->regbase, 512);
+		if (!at91_gpio->regbase) {
+			pr_err("at91_gpio.%d, failed to map registers, ignoring.\n", i);
+			continue;
+		}
 
 		/* enable PIO controller's clock */
 		clk_enable(at91_gpio->bank->clock);
