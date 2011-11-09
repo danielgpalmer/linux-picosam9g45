@@ -55,14 +55,14 @@ static void __init picosam9g45_init_early(void)
 	/* DGBU on ttyS0. (Rx & Tx only) */
 	at91_register_uart(0, 0, 0);
 
-	/* USART1 on ttyS1. (Rx, Tx, RTS, CTS) */
-	/*at91_register_uart(AT91SAM9G45_ID_US0, 1, ATMEL_UART_CTS | ATMEL_UART_RTS);*/
-	
+	/* USART0 on ttyS1. (Rx, Tx, RTS, CTS) */
+	at91_register_uart(AT91SAM9G45_ID_US0, 1, ATMEL_UART_CTS | ATMEL_UART_RTS);
+
 	/* USART1 on ttyS2. (Rx, Tx, RTS, CTS) */
 	at91_register_uart(AT91SAM9G45_ID_US1, 2, ATMEL_UART_CTS | ATMEL_UART_RTS);
 
 	/* USART2 on ttyS3. (Rx, Tx, RTS, CTS) */
-	/*at91_register_uart(AT91SAM9G45_ID_US2, 3, ATMEL_UART_CTS | ATMEL_UART_RTS);*/
+	at91_register_uart(AT91SAM9G45_ID_US2, 3, ATMEL_UART_CTS | ATMEL_UART_RTS);
 
 	/* set serial console to ttyS0 (ie, DBGU) */
 	at91_set_serial_console(0);
