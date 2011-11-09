@@ -25,6 +25,8 @@
 
 #ifdef CONFIG_MACH_PICOSAM9G45
 #ifdef CONFIG_SPARSEMEM
+
+#warning "sparsemem for picosam enabled"
 /*
  * Sparsemem definitions for pico-SAM9G45
  *

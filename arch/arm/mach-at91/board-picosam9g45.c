@@ -56,7 +56,8 @@ static void __init picosam9g45_init_early(void)
 	at91_register_uart(0, 0, 0);
 
 	/* USART1 on ttyS1. (Rx, Tx, RTS, CTS) */
-	at91_register_uart(AT91SAM9G45_ID_US0, 1, ATMEL_UART_CTS | ATMEL_UART_RTS);
+	/*at91_register_uart(AT91SAM9G45_ID_US0, 1, ATMEL_UART_CTS | ATMEL_UART_RTS);*/
+	
 	/* USART1 on ttyS2. (Rx, Tx, RTS, CTS) */
 	at91_register_uart(AT91SAM9G45_ID_US1, 2, ATMEL_UART_CTS | ATMEL_UART_RTS);
 
