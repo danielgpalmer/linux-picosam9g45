@@ -111,33 +111,35 @@ static struct at91_eth_data __initdata ek_macb_data = {
  * LCD Controller
  */
 #if defined(CONFIG_FB_ATMEL) || defined(CONFIG_FB_ATMEL_MODULE)
+#warning "lcd stuff"
 static struct fb_videomode at91_tft_vga_modes[] = {
-	{
-		.name           = "LG",
-		.refresh	= 60,
-		.xres		= 480,		.yres		= 272,
-		.pixclock	= KHZ2PICOS(9000),
+        {
+                .name           = "HannStar",
+                .refresh        = 60,
+                .xres           = 480,          .yres           = 272,
+                .pixclock       = KHZ2PICOS(9000),
 
-		.left_margin	= 1,		.right_margin	= 1,
-		.upper_margin	= 40,		.lower_margin	= 1,
-		.hsync_len	= 45,		.vsync_len	= 1,
+                .left_margin    = 2,            .right_margin   = 2,
+                .upper_margin   = 2,            .lower_margin   = 2,
+                .hsync_len      = 41,           .vsync_len      = 10,
 
-		.sync		= 0,
-		.vmode		= FB_VMODE_NONINTERLACED,
-	},
+                .sync           = 0,
+                .vmode          = FB_VMODE_NONINTERLACED,
+        },
 };
 
 static struct fb_monspecs at91fb_default_monspecs = {
-	.manufacturer	= "LG",
-	.monitor        = "LB043WQ1",
+        .manufacturer   = "HNS",
+        .monitor        = "HSD043I9W1",
 
-	.modedb		= at91_tft_vga_modes,
-	.modedb_len	= ARRAY_SIZE(at91_tft_vga_modes),
-	.hfmin		= 15000,
-	.hfmax		= 17640,
-	.vfmin		= 57,
-	.vfmax		= 67,
+        .modedb         = at91_tft_vga_modes,
+        .modedb_len     = ARRAY_SIZE(at91_tft_vga_modes),
+        .hfmin          = 15000,
+        .hfmax          = 17640,
+        .vfmin          = 57,
+        .vfmax          = 67,
 };
+
 
 #define AT91SAM9G45_DEFAULT_LCDCON2 	(ATMEL_LCDC_MEMOR_LITTLE \
 					| ATMEL_LCDC_DISTYPE_TFT \
@@ -146,7 +148,7 @@ static struct fb_monspecs at91fb_default_monspecs = {
 /* Driver datas */
 static struct atmel_lcdfb_info __initdata ek_lcdc_data = {
 	.lcdcon_is_backlight		= true,
-	.default_bpp			= 32,
+	.default_bpp			= 16,
 	.default_dmacon			= ATMEL_LCDC_DMAEN,
 	.default_lcdcon2		= AT91SAM9G45_DEFAULT_LCDCON2,
 	.default_monspecs		= &at91fb_default_monspecs,
