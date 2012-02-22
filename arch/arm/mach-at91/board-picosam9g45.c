@@ -79,6 +79,23 @@ static struct usba_platform_data __initdata ek_usba_udc_data = {
 	.vbus_pin	= AT91_PIN_PB19,
 };
 
+/*
+ * SPI devices.
+ */
+static struct spi_board_info picosam9g45_spi_devices[] = {
+        [0] = {/* SPI0 CS0 on right side connector J7*/
+                .modalias= "spidev",
+                .max_speed_hz= 15 * 1000 * 1000,
+                .bus_num= 0,
+                .chip_select= 0,
+        },
+        [1] = {/* SPI1 CS0 on left side connector J9*/
+                .modalias= "spidev",
+                .max_speed_hz= 15 * 1000 * 1000,
+                .bus_num= 1,
+                .chip_select= 0,
+        },
+};
 
 /*
  * MCI (SD/MMC)
@@ -319,6 +336,8 @@ static void __init ek_board_init(void)
 	at91_add_device_usbh_ehci(&ek_usbh_hs_data);
 	/* USB HS Device */
 	at91_add_device_usba(&ek_usba_udc_data);
+	/* SPI */
+        at91_add_device_spi(picosam9g45_spi_devices, ARRAY_SIZE(picosam9g45_spi_devices));
 	/* MMC */
 	at91_add_device_mci(0, &mci0_data);
 	at91_add_device_mci(1, &mci1_data);
