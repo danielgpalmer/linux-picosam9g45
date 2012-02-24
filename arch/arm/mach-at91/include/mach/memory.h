@@ -25,6 +25,7 @@
 
 #ifdef CONFIG_MACH_PICOSAM9G45
 #ifdef CONFIG_SPARSEMEM
+
 /*
  * Sparsemem definitions for pico-SAM9G45
  *
