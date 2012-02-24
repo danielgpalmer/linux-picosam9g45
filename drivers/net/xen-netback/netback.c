@@ -395,7 +395,7 @@ static void netbk_gop_frag_copy(struct xenvif *vif, struct sk_buff *skb,
 	struct gnttab_copy *copy_gop;
 	struct netbk_rx_meta *meta;
 	/*
-	 * These variables a used iff get_page_ext returns true,
+	 * These variables are used iff get_page_ext returns true,
 	 * in which case they are guaranteed to be initialized.
 	 */
 	unsigned int uninitialized_var(group), uninitialized_var(idx);
@@ -940,8 +940,6 @@ static struct gnttab_copy *xen_netbk_get_requests(struct xen_netbk *netbk,
 		if (!page)
 			return NULL;
 
-		netbk->mmap_pages[pending_idx] = page;
-
 		gop->source.u.ref = txp->gref;
 		gop->source.domid = vif->domid;
 		gop->source.offset = txp->offset;
@@ -1021,7 +1019,7 @@ static int xen_netbk_tx_check_gop(struct xen_netbk *netbk,
 		pending_idx = *((u16 *)skb->data);
 		xen_netbk_idx_release(netbk, pending_idx);
 		for (j = start; j < i; j++) {
-			pending_idx = frag_get_pending_idx(&shinfo->frags[i]);
+			pending_idx = frag_get_pending_idx(&shinfo->frags[j]);
 			xen_netbk_idx_release(netbk, pending_idx);
 		}
 
@@ -1336,8 +1334,6 @@ static unsigned xen_netbk_tx_build_gops(struct xen_netbk *netbk)
 			continue;
 		}
 
-		netbk->mmap_pages[pending_idx] = page;
-
 		gop->source.u.ref = txreq.gref;
 		gop->source.domid = vif->domid;
 		gop->source.offset = txreq.offset;
@@ -1589,87 +1585,41 @@ static int xen_netbk_kthread(void *data)
 
 void xen_netbk_unmap_frontend_rings(struct xenvif *vif)
 {
-	struct gnttab_unmap_grant_ref op;
-
-	if (vif->tx.sring) {
-		gnttab_set_unmap_op(&op, (unsigned long)vif->tx_comms_area->addr,
-				    GNTMAP_host_map, vif->tx_shmem_handle);
-
-		if (HYPERVISOR_grant_table_op(GNTTABOP_unmap_grant_ref, &op, 1))
-			BUG();
-	}
-
-	if (vif->rx.sring) {
-		gnttab_set_unmap_op(&op, (unsigned long)vif->rx_comms_area->addr,
-				    GNTMAP_host_map, vif->rx_shmem_handle);
-
-		if (HYPERVISOR_grant_table_op(GNTTABOP_unmap_grant_ref, &op, 1))
-			BUG();
-	}
-	if (vif->rx_comms_area)
-		free_vm_area(vif->rx_comms_area);
-	if (vif->tx_comms_area)
-		free_vm_area(vif->tx_comms_area);
+	if (vif->tx.sring)
+		xenbus_unmap_ring_vfree(xenvif_to_xenbus_device(vif),
+					vif->tx.sring);
+	if (vif->rx.sring)
+		xenbus_unmap_ring_vfree(xenvif_to_xenbus_device(vif),
+					vif->rx.sring);
 }
 
 int xen_netbk_map_frontend_rings(struct xenvif *vif,
 				 grant_ref_t tx_ring_ref,
 				 grant_ref_t rx_ring_ref)
 {
-	struct gnttab_map_grant_ref op;
+	void *addr;
 	struct xen_netif_tx_sring *txs;
 	struct xen_netif_rx_sring *rxs;
 
 	int err = -ENOMEM;
 
-	vif->tx_comms_area = alloc_vm_area(PAGE_SIZE);
-	if (vif->tx_comms_area == NULL)
+	err = xenbus_map_ring_valloc(xenvif_to_xenbus_device(vif),
+				     tx_ring_ref, &addr);
+	if (err)
 		goto err;
 
-	vif->rx_comms_area = alloc_vm_area(PAGE_SIZE);
-	if (vif->rx_comms_area == NULL)
-		goto err;
-
-	gnttab_set_map_op(&op, (unsigned long)vif->tx_comms_area->addr,
-			  GNTMAP_host_map, tx_ring_ref, vif->domid);
-
-	if (HYPERVISOR_grant_table_op(GNTTABOP_map_grant_ref, &op, 1))
-		BUG();
-
-	if (op.status) {
-		netdev_warn(vif->dev,
-			    "failed to map tx ring. err=%d status=%d\n",
-			    err, op.status);
-		err = op.status;
-		goto err;
-	}
-
-	vif->tx_shmem_ref    = tx_ring_ref;
-	vif->tx_shmem_handle = op.handle;
-
-	txs = (struct xen_netif_tx_sring *)vif->tx_comms_area->addr;
+	txs = (struct xen_netif_tx_sring *)addr;
 	BACK_RING_INIT(&vif->tx, txs, PAGE_SIZE);
 
-	gnttab_set_map_op(&op, (unsigned long)vif->rx_comms_area->addr,
-			  GNTMAP_host_map, rx_ring_ref, vif->domid);
-
-	if (HYPERVISOR_grant_table_op(GNTTABOP_map_grant_ref, &op, 1))
-		BUG();
-
-	if (op.status) {
-		netdev_warn(vif->dev,
-			    "failed to map rx ring. err=%d status=%d\n",
-			    err, op.status);
-		err = op.status;
+	err = xenbus_map_ring_valloc(xenvif_to_xenbus_device(vif),
+				     rx_ring_ref, &addr);
+	if (err)
 		goto err;
-	}
 
-	vif->rx_shmem_ref     = rx_ring_ref;
-	vif->rx_shmem_handle  = op.handle;
-	vif->rx_req_cons_peek = 0;
-
-	rxs = (struct xen_netif_rx_sring *)vif->rx_comms_area->addr;
+	rxs = (struct xen_netif_rx_sring *)addr;
 	BACK_RING_INIT(&vif->rx, rxs, PAGE_SIZE);
+
+	vif->rx_req_cons_peek = 0;
 
 	return 0;
 
@@ -1684,7 +1634,7 @@ static int __init netback_init(void)
 	int rc = 0;
 	int group;
 
-	if (!xen_pv_domain())
+	if (!xen_domain())
 		return -ENODEV;
 
 	xen_netbk_group_nr = num_online_cpus();
@@ -1714,7 +1664,7 @@ static int __init netback_init(void)
 					     "netback/%u", group);
 
 		if (IS_ERR(netbk->task)) {
-			printk(KERN_ALERT "kthread_run() fails at netback\n");
+			printk(KERN_ALERT "kthread_create() fails at netback\n");
 			del_timer(&netbk->net_timer);
 			rc = PTR_ERR(netbk->task);
 			goto failed_init;

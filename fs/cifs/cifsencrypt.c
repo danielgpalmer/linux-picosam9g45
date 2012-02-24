@@ -204,7 +204,7 @@ int cifs_verify_signature(struct kvec *iov, unsigned int nr_iov,
 }
 
 /* first calculate 24 bytes ntlm response and then 16 byte session key */
-int setup_ntlm_response(struct cifs_ses *ses)
+int setup_ntlm_response(struct cifs_ses *ses, const struct nls_table *nls_cp)
 {
 	int rc = 0;
 	unsigned int temp_len = CIFS_SESS_KEY_SIZE + CIFS_AUTH_RESP_SIZE;
@@ -221,14 +221,14 @@ int setup_ntlm_response(struct cifs_ses *ses)
 	ses->auth_key.len = temp_len;
 
 	rc = SMBNTencrypt(ses->password, ses->server->cryptkey,
-			ses->auth_key.response + CIFS_SESS_KEY_SIZE);
+			ses->auth_key.response + CIFS_SESS_KEY_SIZE, nls_cp);
 	if (rc) {
 		cFYI(1, "%s Can't generate NTLM response, error: %d",
 			__func__, rc);
 		return rc;
 	}
 
-	rc = E_md4hash(ses->password, temp_key);
+	rc = E_md4hash(ses->password, temp_key, nls_cp);
 	if (rc) {
 		cFYI(1, "%s Can't generate NT hash, error: %d", __func__, rc);
 		return rc;
@@ -327,7 +327,7 @@ build_avpair_blob(struct cifs_ses *ses, const struct nls_table *nls_cp)
 	attrptr->type = cpu_to_le16(NTLMSSP_AV_NB_DOMAIN_NAME);
 	attrptr->length = cpu_to_le16(2 * dlen);
 	blobptr = (unsigned char *)attrptr + sizeof(struct ntlmssp2_name);
-	cifs_strtoUCS((__le16 *)blobptr, ses->domainName, dlen, nls_cp);
+	cifs_strtoUTF16((__le16 *)blobptr, ses->domainName, dlen, nls_cp);
 
 	return 0;
 }
@@ -376,7 +376,7 @@ find_domain_name(struct cifs_ses *ses, const struct nls_table *nls_cp)
 					kmalloc(attrsize + 1, GFP_KERNEL);
 				if (!ses->domainName)
 						return -ENOMEM;
-				cifs_from_ucs2(ses->domainName,
+				cifs_from_utf16(ses->domainName,
 					(__le16 *)blobptr, attrsize, attrsize,
 					nls_cp, false);
 				break;
@@ -404,7 +404,7 @@ static int calc_ntlmv2_hash(struct cifs_ses *ses, char *ntlmv2_hash,
 	}
 
 	/* calculate md4 hash of password */
-	E_md4hash(ses->password, nt_hash);
+	E_md4hash(ses->password, nt_hash, nls_cp);
 
 	rc = crypto_shash_setkey(ses->server->secmech.hmacmd5, nt_hash,
 				CIFS_NTHASH_SIZE);
@@ -420,15 +420,20 @@ static int calc_ntlmv2_hash(struct cifs_ses *ses, char *ntlmv2_hash,
 	}
 
 	/* convert ses->user_name to unicode and uppercase */
-	len = strlen(ses->user_name);
+	len = ses->user_name ? strlen(ses->user_name) : 0;
 	user = kmalloc(2 + (len * 2), GFP_KERNEL);
 	if (user == NULL) {
 		cERROR(1, "calc_ntlmv2_hash: user mem alloc failure\n");
 		rc = -ENOMEM;
 		return rc;
 	}
-	len = cifs_strtoUCS((__le16 *)user, ses->user_name, len, nls_cp);
-	UniStrupr(user);
+
+	if (len) {
+		len = cifs_strtoUTF16((__le16 *)user, ses->user_name, len, nls_cp);
+		UniStrupr(user);
+	} else {
+		memset(user, '\0', 2);
+	}
 
 	rc = crypto_shash_update(&ses->server->secmech.sdeschmacmd5->shash,
 				(char *)user, 2 * len);
@@ -448,8 +453,8 @@ static int calc_ntlmv2_hash(struct cifs_ses *ses, char *ntlmv2_hash,
 			rc = -ENOMEM;
 			return rc;
 		}
-		len = cifs_strtoUCS((__le16 *)domain, ses->domainName, len,
-					nls_cp);
+		len = cifs_strtoUTF16((__le16 *)domain, ses->domainName, len,
+				      nls_cp);
 		rc =
 		crypto_shash_update(&ses->server->secmech.sdeschmacmd5->shash,
 					(char *)domain, 2 * len);
@@ -468,7 +473,7 @@ static int calc_ntlmv2_hash(struct cifs_ses *ses, char *ntlmv2_hash,
 			rc = -ENOMEM;
 			return rc;
 		}
-		len = cifs_strtoUCS((__le16 *)server, ses->serverName, len,
+		len = cifs_strtoUTF16((__le16 *)server, ses->serverName, len,
 					nls_cp);
 		rc =
 		crypto_shash_update(&ses->server->secmech.sdeschmacmd5->shash,

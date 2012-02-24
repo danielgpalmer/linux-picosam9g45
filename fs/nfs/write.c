@@ -20,6 +20,7 @@
 #include <linux/nfs_mount.h>
 #include <linux/nfs_page.h>
 #include <linux/backing-dev.h>
+#include <linux/export.h>
 
 #include <asm/uaccess.h>
 
@@ -1051,7 +1052,7 @@ static const struct nfs_pageio_ops nfs_pageio_write_ops = {
 	.pg_doio = nfs_generic_pg_writepages,
 };
 
-static void nfs_pageio_init_write_mds(struct nfs_pageio_descriptor *pgio,
+void nfs_pageio_init_write_mds(struct nfs_pageio_descriptor *pgio,
 				  struct inode *inode, int ioflags)
 {
 	nfs_pageio_init(pgio, inode, &nfs_pageio_write_ops,
@@ -1165,13 +1166,7 @@ static void nfs_writeback_done_full(struct rpc_task *task, void *calldata)
 static void nfs_writeback_release_full(void *calldata)
 {
 	struct nfs_write_data	*data = calldata;
-	int ret, status = data->task.tk_status;
-	struct nfs_pageio_descriptor pgio;
-
-	if (data->pnfs_error) {
-		nfs_pageio_init_write_mds(&pgio, data->inode, FLUSH_STABLE);
-		pgio.pg_recoalesce = 1;
-	}
+	int status = data->task.tk_status;
 
 	/* Update attributes as result of writeback. */
 	while (!list_empty(&data->pages)) {
@@ -1186,11 +1181,6 @@ static void nfs_writeback_release_full(void *calldata)
 			(long long)NFS_FILEID(req->wb_context->dentry->d_inode),
 			req->wb_bytes,
 			(long long)req_offset(req));
-
-		if (data->pnfs_error) {
-			dprintk(", pnfs error = %d\n", data->pnfs_error);
-			goto next;
-		}
 
 		if (status < 0) {
 			nfs_set_pageerror(page);
@@ -1211,19 +1201,7 @@ remove_request:
 	next:
 		nfs_clear_page_tag_locked(req);
 		nfs_end_page_writeback(page);
-		if (data->pnfs_error) {
-			lock_page(page);
-			nfs_pageio_cond_complete(&pgio, page->index);
-			ret = nfs_page_async_flush(&pgio, page, 0);
-			if (ret) {
-				nfs_set_pageerror(page);
-				dprintk("rewrite to MDS error = %d\n", ret);
-			}
-			unlock_page(page);
-		}
 	}
-	if (data->pnfs_error)
-		nfs_pageio_complete(&pgio);
 	nfs_writedata_release(calldata);
 }
 
@@ -1243,7 +1221,6 @@ void nfs_writeback_done(struct rpc_task *task, struct nfs_write_data *data)
 {
 	struct nfs_writeargs	*argp = &data->args;
 	struct nfs_writeres	*resp = &data->res;
-	struct nfs_server	*server = NFS_SERVER(data->inode);
 	int status;
 
 	dprintk("NFS: %5u nfs_writeback_done (status %d)\n",
@@ -1277,7 +1254,7 @@ void nfs_writeback_done(struct rpc_task *task, struct nfs_write_data *data)
 		if (time_before(complain, jiffies)) {
 			dprintk("NFS:       faulty NFS server %s:"
 				" (committed = %d) != (stable = %d)\n",
-				server->nfs_client->cl_hostname,
+				NFS_SERVER(data->inode)->nfs_client->cl_hostname,
 				resp->verf->committed, argp->stable);
 			complain = jiffies + 300 * HZ;
 		}
@@ -1711,7 +1688,7 @@ out_error:
 
 #ifdef CONFIG_MIGRATION
 int nfs_migrate_page(struct address_space *mapping, struct page *newpage,
-		struct page *page)
+		struct page *page, enum migrate_mode mode)
 {
 	/*
 	 * If PagePrivate is set, then the page is currently associated with
@@ -1726,7 +1703,7 @@ int nfs_migrate_page(struct address_space *mapping, struct page *newpage,
 
 	nfs_fscache_release_page(page, GFP_KERNEL);
 
-	return migrate_page(mapping, newpage, page);
+	return migrate_page(mapping, newpage, page, mode);
 }
 #endif
 

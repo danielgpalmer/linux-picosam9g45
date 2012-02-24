@@ -46,6 +46,7 @@
 #include <linux/mutex.h>
 #include <linux/io.h>
 #include <linux/slab.h>
+#include <linux/module.h>
 
 #include <asm/page.h>
 #include <asm/pgtable.h>
@@ -290,14 +291,9 @@ void xenbus_dev_shutdown(struct device *_dev)
 EXPORT_SYMBOL_GPL(xenbus_dev_shutdown);
 
 int xenbus_register_driver_common(struct xenbus_driver *drv,
-				  struct xen_bus_type *bus,
-				  struct module *owner,
-				  const char *mod_name)
+				  struct xen_bus_type *bus)
 {
-	drv->driver.name = drv->name;
 	drv->driver.bus = &bus->bus;
-	drv->driver.owner = owner;
-	drv->driver.mod_name = mod_name;
 
 	return driver_register(&drv->driver);
 }
@@ -309,8 +305,7 @@ void xenbus_unregister_driver(struct xenbus_driver *drv)
 }
 EXPORT_SYMBOL_GPL(xenbus_unregister_driver);
 
-struct xb_find_info
-{
+struct xb_find_info {
 	struct xenbus_device *dev;
 	const char *nodename;
 };
@@ -639,7 +634,7 @@ int xenbus_dev_cancel(struct device *dev)
 EXPORT_SYMBOL_GPL(xenbus_dev_cancel);
 
 /* A flag to determine if xenstored is 'ready' (i.e. has started) */
-int xenstored_ready = 0;
+int xenstored_ready;
 
 
 int register_xenstore_notifier(struct notifier_block *nb)
@@ -730,6 +725,8 @@ static int __init xenbus_init(void)
 	if (!xen_domain())
 		return -ENODEV;
 
+	xenbus_ring_ops_init();
+
 	if (xen_hvm_domain()) {
 		uint64_t v = 0;
 		err = hvm_get_parameter(HVM_PARAM_STORE_EVTCHN, &v);
@@ -770,7 +767,7 @@ static int __init xenbus_init(void)
 	proc_mkdir("xen", NULL);
 #endif
 
- out_error:
+out_error:
 	return err;
 }
 

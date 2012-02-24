@@ -82,6 +82,7 @@
 
 #define IPR_SUBS_DEV_ID_57B4    0x033B
 #define IPR_SUBS_DEV_ID_57B2    0x035F
+#define IPR_SUBS_DEV_ID_57C3    0x0353
 #define IPR_SUBS_DEV_ID_57C4    0x0354
 #define IPR_SUBS_DEV_ID_57C6    0x0357
 #define IPR_SUBS_DEV_ID_57CC    0x035C
@@ -1386,6 +1387,7 @@ struct ipr_ioa_cfg {
 	u8 msi_received:1;
 	u8 sis64:1;
 	u8 dump_timeout:1;
+	u8 cfg_locked:1;
 
 	u8 revid;
 

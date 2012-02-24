@@ -215,10 +215,9 @@ defer_free(struct nfsd4_compoundargs *argp,
 static char *savemem(struct nfsd4_compoundargs *argp, __be32 *p, int nbytes)
 {
 	if (p == argp->tmp) {
-		p = kmalloc(nbytes, GFP_KERNEL);
+		p = kmemdup(argp->tmp, nbytes, GFP_KERNEL);
 		if (!p)
 			return NULL;
-		memcpy(p, argp->tmp, nbytes);
 	} else {
 		BUG_ON(p != argp->tmpp);
 		argp->tmpp = NULL;
@@ -655,7 +654,7 @@ static __be32 nfsd4_decode_share_access(struct nfsd4_compoundargs *argp, u32 *x)
 	default:
 		return nfserr_bad_xdr;
 	}
-	w &= !NFS4_SHARE_ACCESS_MASK;
+	w &= ~NFS4_SHARE_ACCESS_MASK;
 	if (!w)
 		return nfs_ok;
 	if (!argp->minorversion)

@@ -21,6 +21,7 @@
 
 #include <linux/clk.h>
 #include <linux/platform_device.h>
+#include <linux/module.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/soc.h>
@@ -71,6 +72,7 @@ static struct snd_soc_dai_link overo_dai = {
 /* Audio machine driver */
 static struct snd_soc_card snd_soc_card_overo = {
 	.name = "overo",
+	.owner = THIS_MODULE,
 	.dai_link = &overo_dai,
 	.num_links = 1,
 };

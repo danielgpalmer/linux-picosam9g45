@@ -25,6 +25,7 @@
 #include <linux/bitops.h>
 #include <linux/serial_8250.h>
 #include <linux/mm.h>
+#include <linux/export.h>
 
 #include <asm/types.h>
 #include <asm/setup.h>
@@ -514,3 +515,7 @@ void __init ixp2000_init_irq(void)
 	}
 }
 
+void ixp2000_restart(char mode, const char *cmd)
+{
+	ixp2000_reg_wrb(IXP2000_RESET0, RSTALL);
+}

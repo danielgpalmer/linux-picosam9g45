@@ -275,7 +275,7 @@ static struct platform_nand_data ts78xx_ts_nand_data = {
 		.partitions		= ts78xx_ts_nand_parts,
 		.nr_partitions		= ARRAY_SIZE(ts78xx_ts_nand_parts),
 		.chip_delay		= 15,
-		.options		= NAND_USE_FLASH_BBT,
+		.bbt_options		= NAND_BBT_USE_FLASH,
 	},
 	.ctrl	= {
 		/*
@@ -627,4 +627,5 @@ MACHINE_START(TS78XX, "Technologic Systems TS-78xx SBC")
 	.init_early	= orion5x_init_early,
 	.init_irq	= orion5x_init_irq,
 	.timer		= &orion5x_timer,
+	.restart	= orion5x_restart,
 MACHINE_END

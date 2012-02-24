@@ -20,6 +20,7 @@
  */
 
 #include <linux/blkdev.h>
+#include <linux/module.h>
 #include <linux/raid/md_u.h>
 #include <linux/seq_file.h>
 #include <linux/slab.h>
@@ -106,7 +107,7 @@ static void multipath_end_request(struct bio *bio, int error)
 	rdev_dec_pending(rdev, conf->mddev);
 }
 
-static int multipath_make_request(struct mddev *mddev, struct bio * bio)
+static void multipath_make_request(struct mddev *mddev, struct bio * bio)
 {
 	struct mpconf *conf = mddev->private;
 	struct multipath_bh * mp_bh;
@@ -114,7 +115,7 @@ static int multipath_make_request(struct mddev *mddev, struct bio * bio)
 
 	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
 		md_flush_request(mddev, bio);
-		return 0;
+		return;
 	}
 
 	mp_bh = mempool_alloc(conf->pool, GFP_NOIO);
@@ -126,7 +127,7 @@ static int multipath_make_request(struct mddev *mddev, struct bio * bio)
 	if (mp_bh->path < 0) {
 		bio_endio(bio, -EIO);
 		mempool_free(mp_bh, conf->pool);
-		return 0;
+		return;
 	}
 	multipath = conf->multipaths + mp_bh->path;
 
@@ -137,7 +138,7 @@ static int multipath_make_request(struct mddev *mddev, struct bio * bio)
 	mp_bh->bio.bi_end_io = multipath_end_request;
 	mp_bh->bio.bi_private = mp_bh;
 	generic_make_request(&mp_bh->bio);
-	return 0;
+	return;
 }
 
 static void multipath_status (struct seq_file *seq, struct mddev *mddev)
@@ -291,17 +292,16 @@ static int multipath_add_disk(struct mddev *mddev, struct md_rdev *rdev)
 	return err;
 }
 
-static int multipath_remove_disk(struct mddev *mddev, int number)
+static int multipath_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
 {
 	struct mpconf *conf = mddev->private;
 	int err = 0;
-	struct md_rdev *rdev;
+	int number = rdev->raid_disk;
 	struct multipath_info *p = conf->multipaths + number;
 
 	print_multipath_conf(conf);
 
-	rdev = p->rdev;
-	if (rdev) {
+	if (rdev == p->rdev) {
 		if (test_bit(In_sync, &rdev->flags) ||
 		    atomic_read(&rdev->nr_pending)) {
 			printk(KERN_ERR "hot-remove-disk, slot %d is identified"

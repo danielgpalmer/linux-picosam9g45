@@ -11,6 +11,7 @@
  */
 #include <net/mac80211.h>
 #include <linux/usb.h>
+#include <linux/module.h>
 
 #include "core.h"
 #include "mds_f.h"
@@ -864,15 +865,4 @@ static struct usb_driver wb35_driver = {
 	.disconnect	= wb35_disconnect,
 };
 
-static int __init wb35_init(void)
-{
-	return usb_register(&wb35_driver);
-}
-
-static void __exit wb35_exit(void)
-{
-	usb_deregister(&wb35_driver);
-}
-
-module_init(wb35_init);
-module_exit(wb35_exit);
+module_usb_driver(wb35_driver);

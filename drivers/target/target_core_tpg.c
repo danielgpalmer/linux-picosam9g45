@@ -32,19 +32,17 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/in.h>
+#include <linux/export.h>
 #include <net/sock.h>
 #include <net/tcp.h>
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
 
 #include <target/target_core_base.h>
-#include <target/target_core_device.h>
-#include <target/target_core_tpg.h>
-#include <target/target_core_transport.h>
-#include <target/target_core_fabric_ops.h>
+#include <target/target_core_backend.h>
+#include <target/target_core_fabric.h>
 
-#include "target_core_hba.h"
-#include "target_core_stat.h"
+#include "target_core_internal.h"
 
 extern struct se_device *g_lun0_dev;
 
@@ -809,8 +807,7 @@ static void core_tpg_shutdown_lun(
 
 struct se_lun *core_tpg_pre_dellun(
 	struct se_portal_group *tpg,
-	u32 unpacked_lun,
-	int *ret)
+	u32 unpacked_lun)
 {
 	struct se_lun *lun;
 

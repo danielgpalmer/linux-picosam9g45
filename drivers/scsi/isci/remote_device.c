@@ -53,6 +53,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <scsi/sas.h>
+#include <linux/bitops.h>
 #include "isci.h"
 #include "port.h"
 #include "remote_device.h"
@@ -1101,6 +1102,7 @@ static enum sci_status sci_remote_device_da_construct(struct isci_port *iport,
 						       struct isci_remote_device *idev)
 {
 	enum sci_status status;
+	struct sci_port_properties properties;
 	struct domain_device *dev = idev->domain_dev;
 
 	sci_remote_device_construct(iport, idev);
@@ -1110,6 +1112,11 @@ static enum sci_status sci_remote_device_da_construct(struct isci_port *iport,
 	 * entries will be needed to store the remote node.
 	 */
 	idev->is_direct_attached = true;
+
+	sci_port_get_properties(iport, &properties);
+	/* Get accurate port width from port's phy mask for a DA device. */
+	idev->device_port_width = hweight32(properties.phy_mask);
+
 	status = sci_controller_allocate_remote_node_context(iport->owning_controller,
 								  idev,
 								  &idev->rnc.remote_node_index);
@@ -1124,9 +1131,6 @@ static enum sci_status sci_remote_device_da_construct(struct isci_port *iport,
 		return SCI_FAILURE_UNSUPPORTED_PROTOCOL;
 
 	idev->connection_rate = sci_port_get_max_allowed_speed(iport);
-
-	/* / @todo Should I assign the port width by reading all of the phys on the port? */
-	idev->device_port_width = 1;
 
 	return SCI_SUCCESS;
 }
@@ -1437,89 +1441,4 @@ int isci_remote_device_found(struct domain_device *domain_dev)
 	wait_for_device_start(isci_host, isci_device);
 
 	return status == SCI_SUCCESS ? 0 : -ENODEV;
-}
-/**
- * isci_device_is_reset_pending() - This function will check if there is any
- *    pending reset condition on the device.
- * @request: This parameter is the isci_device object.
- *
- * true if there is a reset pending for the device.
- */
-bool isci_device_is_reset_pending(
-	struct isci_host *isci_host,
-	struct isci_remote_device *isci_device)
-{
-	struct isci_request *isci_request;
-	struct isci_request *tmp_req;
-	bool reset_is_pending = false;
-	unsigned long flags;
-
-	dev_dbg(&isci_host->pdev->dev,
-		"%s: isci_device = %p\n", __func__, isci_device);
-
-	spin_lock_irqsave(&isci_host->scic_lock, flags);
-
-	/* Check for reset on all pending requests. */
-	list_for_each_entry_safe(isci_request, tmp_req,
-				 &isci_device->reqs_in_process, dev_node) {
-		dev_dbg(&isci_host->pdev->dev,
-			"%s: isci_device = %p request = %p\n",
-			__func__, isci_device, isci_request);
-
-		if (isci_request->ttype == io_task) {
-			struct sas_task *task = isci_request_access_task(
-				isci_request);
-
-			spin_lock(&task->task_state_lock);
-			if (task->task_state_flags & SAS_TASK_NEED_DEV_RESET)
-				reset_is_pending = true;
-			spin_unlock(&task->task_state_lock);
-		}
-	}
-
-	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-
-	dev_dbg(&isci_host->pdev->dev,
-		"%s: isci_device = %p reset_is_pending = %d\n",
-		__func__, isci_device, reset_is_pending);
-
-	return reset_is_pending;
-}
-
-/**
- * isci_device_clear_reset_pending() - This function will clear if any pending
- *    reset condition flags on the device.
- * @request: This parameter is the isci_device object.
- *
- * true if there is a reset pending for the device.
- */
-void isci_device_clear_reset_pending(struct isci_host *ihost, struct isci_remote_device *idev)
-{
-	struct isci_request *isci_request;
-	struct isci_request *tmp_req;
-	unsigned long flags = 0;
-
-	dev_dbg(&ihost->pdev->dev, "%s: idev=%p, ihost=%p\n",
-		 __func__, idev, ihost);
-
-	spin_lock_irqsave(&ihost->scic_lock, flags);
-
-	/* Clear reset pending on all pending requests. */
-	list_for_each_entry_safe(isci_request, tmp_req,
-				 &idev->reqs_in_process, dev_node) {
-		dev_dbg(&ihost->pdev->dev, "%s: idev = %p request = %p\n",
-			 __func__, idev, isci_request);
-
-		if (isci_request->ttype == io_task) {
-
-			unsigned long flags2;
-			struct sas_task *task = isci_request_access_task(
-				isci_request);
-
-			spin_lock_irqsave(&task->task_state_lock, flags2);
-			task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
-			spin_unlock_irqrestore(&task->task_state_lock, flags2);
-		}
-	}
-	spin_unlock_irqrestore(&ihost->scic_lock, flags);
 }

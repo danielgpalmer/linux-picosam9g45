@@ -110,21 +110,13 @@
 #endif
 
 /* Maximum 8*7 GPIO lines */
-#ifdef CONFIG_GPIO_U300
+#ifdef CONFIG_PINCTRL_COH901
 #define IRQ_U300_GPIO_BASE		(U300_VIC_IRQS_END)
 #define IRQ_U300_GPIO_END		(IRQ_U300_GPIO_BASE + 56)
 #else
 #define IRQ_U300_GPIO_END		(U300_VIC_IRQS_END)
 #endif
 
-/* Optional AB3550 mixsig chip */
-#ifdef CONFIG_AB3550_CORE
-#define IRQ_AB3550_BASE			(IRQ_U300_GPIO_END)
-#define IRQ_AB3550_END			(IRQ_AB3550_BASE + 38)
-#else
-#define IRQ_AB3550_END			(IRQ_U300_GPIO_END)
-#endif
-
-#define NR_IRQS				(IRQ_AB3550_END)
+#define NR_IRQS				(IRQ_U300_GPIO_END)
 
 #endif

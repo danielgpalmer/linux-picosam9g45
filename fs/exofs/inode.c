@@ -1165,7 +1165,7 @@ struct inode *exofs_iget(struct super_block *sb, unsigned long ino)
 	inode->i_mode = le16_to_cpu(fcb.i_mode);
 	inode->i_uid = le32_to_cpu(fcb.i_uid);
 	inode->i_gid = le32_to_cpu(fcb.i_gid);
-	inode->i_nlink = le16_to_cpu(fcb.i_links_count);
+	set_nlink(inode, le16_to_cpu(fcb.i_links_count));
 	inode->i_ctime.tv_sec = (signed)le32_to_cpu(fcb.i_ctime);
 	inode->i_atime.tv_sec = (signed)le32_to_cpu(fcb.i_atime);
 	inode->i_mtime.tv_sec = (signed)le32_to_cpu(fcb.i_mtime);
@@ -1276,7 +1276,7 @@ static void create_done(struct ore_io_state *ios, void *p)
 /*
  * Set up a new inode and create an object for it on the OSD
  */
-struct inode *exofs_new_inode(struct inode *dir, int mode)
+struct inode *exofs_new_inode(struct inode *dir, umode_t mode)
 {
 	struct super_block *sb = dir->i_sb;
 	struct exofs_sb_info *sbi = sb->s_fs_info;

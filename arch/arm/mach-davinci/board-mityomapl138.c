@@ -396,7 +396,8 @@ static struct davinci_nand_pdata mityomapl138_nandflash_data = {
 	.parts		= mityomapl138_nandflash_partition,
 	.nr_parts	= ARRAY_SIZE(mityomapl138_nandflash_partition),
 	.ecc_mode	= NAND_ECC_HW,
-	.options	= NAND_USE_FLASH_BBT | NAND_BUSWIDTH_16,
+	.bbt_options	= NAND_BBT_USE_FLASH,
+	.options	= NAND_BUSWIDTH_16,
 	.ecc_bits	= 1, /* 4 bit mode is not supported with 16 bit NAND */
 };
 
@@ -572,4 +573,5 @@ MACHINE_START(MITYOMAPL138, "MityDSP-L138/MityARM-1808")
 	.timer		= &davinci_timer,
 	.init_machine	= mityomapl138_init,
 	.dma_zone_size	= SZ_128M,
+	.restart	= da8xx_restart,
 MACHINE_END

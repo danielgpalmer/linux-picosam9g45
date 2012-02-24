@@ -335,7 +335,7 @@ struct packet_skb_cb {
 	(((x)->kactive_blk_num < ((x)->knum_blocks-1)) ? \
 	((x)->kactive_blk_num+1) : 0)
 
-static inline struct packet_sock *pkt_sk(struct sock *sk)
+static struct packet_sock *pkt_sk(struct sock *sk)
 {
 	return (struct packet_sock *)sk;
 }
@@ -477,7 +477,7 @@ static void *packet_lookup_frame(struct packet_sock *po,
 	return h.raw;
 }
 
-static inline void *packet_current_frame(struct packet_sock *po,
+static void *packet_current_frame(struct packet_sock *po,
 		struct packet_ring_buffer *rb,
 		int status)
 {
@@ -715,7 +715,7 @@ out:
 	spin_unlock(&po->sk.sk_receive_queue.lock);
 }
 
-static inline void prb_flush_block(struct tpacket_kbdq_core *pkc1,
+static void prb_flush_block(struct tpacket_kbdq_core *pkc1,
 		struct tpacket_block_desc *pbd1, __u32 status)
 {
 	/* Flush everything minus the block header */
@@ -793,7 +793,7 @@ static void prb_close_block(struct tpacket_kbdq_core *pkc1,
 	pkc1->kactive_blk_num = GET_NEXT_PRB_BLK_NUM(pkc1);
 }
 
-static inline void prb_thaw_queue(struct tpacket_kbdq_core *pkc)
+static void prb_thaw_queue(struct tpacket_kbdq_core *pkc)
 {
 	pkc->reset_pending_on_curr_blk = 0;
 }
@@ -869,7 +869,7 @@ static void prb_open_block(struct tpacket_kbdq_core *pkc1,
  *         case and __packet_lookup_frame_in_block will check if block-0
  *         is free and can now be re-used.
  */
-static inline void prb_freeze_queue(struct tpacket_kbdq_core *pkc,
+static void prb_freeze_queue(struct tpacket_kbdq_core *pkc,
 				  struct packet_sock *po)
 {
 	pkc->reset_pending_on_curr_blk = 1;
@@ -940,36 +940,36 @@ static void prb_retire_current_block(struct tpacket_kbdq_core *pkc,
 	BUG();
 }
 
-static inline int prb_curr_blk_in_use(struct tpacket_kbdq_core *pkc,
+static int prb_curr_blk_in_use(struct tpacket_kbdq_core *pkc,
 				      struct tpacket_block_desc *pbd)
 {
 	return TP_STATUS_USER & BLOCK_STATUS(pbd);
 }
 
-static inline int prb_queue_frozen(struct tpacket_kbdq_core *pkc)
+static int prb_queue_frozen(struct tpacket_kbdq_core *pkc)
 {
 	return pkc->reset_pending_on_curr_blk;
 }
 
-static inline void prb_clear_blk_fill_status(struct packet_ring_buffer *rb)
+static void prb_clear_blk_fill_status(struct packet_ring_buffer *rb)
 {
 	struct tpacket_kbdq_core *pkc  = GET_PBDQC_FROM_RB(rb);
 	atomic_dec(&pkc->blk_fill_in_prog);
 }
 
-static inline void prb_fill_rxhash(struct tpacket_kbdq_core *pkc,
+static void prb_fill_rxhash(struct tpacket_kbdq_core *pkc,
 			struct tpacket3_hdr *ppd)
 {
 	ppd->hv1.tp_rxhash = skb_get_rxhash(pkc->skb);
 }
 
-static inline void prb_clear_rxhash(struct tpacket_kbdq_core *pkc,
+static void prb_clear_rxhash(struct tpacket_kbdq_core *pkc,
 			struct tpacket3_hdr *ppd)
 {
 	ppd->hv1.tp_rxhash = 0;
 }
 
-static inline void prb_fill_vlan_info(struct tpacket_kbdq_core *pkc,
+static void prb_fill_vlan_info(struct tpacket_kbdq_core *pkc,
 			struct tpacket3_hdr *ppd)
 {
 	if (vlan_tx_tag_present(pkc->skb)) {
@@ -991,7 +991,7 @@ static void prb_run_all_ft_ops(struct tpacket_kbdq_core *pkc,
 		prb_clear_rxhash(pkc, ppd);
 }
 
-static inline void prb_fill_curr_block(char *curr,
+static void prb_fill_curr_block(char *curr,
 				struct tpacket_kbdq_core *pkc,
 				struct tpacket_block_desc *pbd,
 				unsigned int len)
@@ -1071,7 +1071,7 @@ static void *__packet_lookup_frame_in_block(struct packet_sock *po,
 	return NULL;
 }
 
-static inline void *packet_current_rx_frame(struct packet_sock *po,
+static void *packet_current_rx_frame(struct packet_sock *po,
 					    struct sk_buff *skb,
 					    int status, unsigned int len)
 {
@@ -1091,7 +1091,7 @@ static inline void *packet_current_rx_frame(struct packet_sock *po,
 	}
 }
 
-static inline void *prb_lookup_block(struct packet_sock *po,
+static void *prb_lookup_block(struct packet_sock *po,
 				     struct packet_ring_buffer *rb,
 				     unsigned int previous,
 				     int status)
@@ -1104,7 +1104,7 @@ static inline void *prb_lookup_block(struct packet_sock *po,
 	return pbd;
 }
 
-static inline int prb_previous_blk_num(struct packet_ring_buffer *rb)
+static int prb_previous_blk_num(struct packet_ring_buffer *rb)
 {
 	unsigned int prev;
 	if (rb->prb_bdqc.kactive_blk_num)
@@ -1115,7 +1115,7 @@ static inline int prb_previous_blk_num(struct packet_ring_buffer *rb)
 }
 
 /* Assumes caller has held the rx_queue.lock */
-static inline void *__prb_previous_block(struct packet_sock *po,
+static void *__prb_previous_block(struct packet_sock *po,
 					 struct packet_ring_buffer *rb,
 					 int status)
 {
@@ -1123,7 +1123,7 @@ static inline void *__prb_previous_block(struct packet_sock *po,
 	return prb_lookup_block(po, rb, previous, status);
 }
 
-static inline void *packet_previous_rx_frame(struct packet_sock *po,
+static void *packet_previous_rx_frame(struct packet_sock *po,
 					     struct packet_ring_buffer *rb,
 					     int status)
 {
@@ -1133,7 +1133,7 @@ static inline void *packet_previous_rx_frame(struct packet_sock *po,
 	return __prb_previous_block(po, rb, status);
 }
 
-static inline void packet_increment_rx_head(struct packet_sock *po,
+static void packet_increment_rx_head(struct packet_sock *po,
 					    struct packet_ring_buffer *rb)
 {
 	switch (po->tp_version) {
@@ -1148,7 +1148,7 @@ static inline void packet_increment_rx_head(struct packet_sock *po,
 	}
 }
 
-static inline void *packet_previous_frame(struct packet_sock *po,
+static void *packet_previous_frame(struct packet_sock *po,
 		struct packet_ring_buffer *rb,
 		int status)
 {
@@ -1156,7 +1156,7 @@ static inline void *packet_previous_frame(struct packet_sock *po,
 	return packet_lookup_frame(po, rb, previous, status);
 }
 
-static inline void packet_increment_head(struct packet_ring_buffer *buff)
+static void packet_increment_head(struct packet_ring_buffer *buff)
 {
 	buff->head = buff->head != buff->frame_max ? buff->head+1 : 0;
 }
@@ -1499,10 +1499,11 @@ retry:
 
 	if (!skb) {
 		size_t reserved = LL_RESERVED_SPACE(dev);
+		int tlen = dev->needed_tailroom;
 		unsigned int hhlen = dev->header_ops ? dev->hard_header_len : 0;
 
 		rcu_read_unlock();
-		skb = sock_wmalloc(sk, len + reserved, 0, GFP_KERNEL);
+		skb = sock_wmalloc(sk, len + reserved + tlen, 0, GFP_KERNEL);
 		if (skb == NULL)
 			return -ENOBUFS;
 		/* FIXME: Save some space for broken drivers that write a hard
@@ -1558,7 +1559,7 @@ out_free:
 	return err;
 }
 
-static inline unsigned int run_filter(const struct sk_buff *skb,
+static unsigned int run_filter(const struct sk_buff *skb,
 				      const struct sock *sk,
 				      unsigned int res)
 {
@@ -1630,8 +1631,7 @@ static int packet_rcv(struct sk_buff *skb, struct net_device *dev,
 	if (snaplen > res)
 		snaplen = res;
 
-	if (atomic_read(&sk->sk_rmem_alloc) + skb->truesize >=
-	    (unsigned)sk->sk_rcvbuf)
+	if (atomic_read(&sk->sk_rmem_alloc) >= sk->sk_rcvbuf)
 		goto drop_n_acct;
 
 	if (skb_shared(skb)) {
@@ -1762,8 +1762,7 @@ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev,
 	if (po->tp_version <= TPACKET_V2) {
 		if (macoff + snaplen > po->rx_ring.frame_size) {
 			if (po->copy_thresh &&
-				atomic_read(&sk->sk_rmem_alloc) + skb->truesize
-				< (unsigned)sk->sk_rcvbuf) {
+			    atomic_read(&sk->sk_rmem_alloc) < sk->sk_rcvbuf) {
 				if (skb_shared(skb)) {
 					copy_skb = skb_clone(skb, GFP_ATOMIC);
 				} else {
@@ -1944,7 +1943,7 @@ static void tpacket_destruct_skb(struct sk_buff *skb)
 
 static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
 		void *frame, struct net_device *dev, int size_max,
-		__be16 proto, unsigned char *addr)
+		__be16 proto, unsigned char *addr, int hlen)
 {
 	union {
 		struct tpacket_hdr *h1;
@@ -1978,7 +1977,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
 		return -EMSGSIZE;
 	}
 
-	skb_reserve(skb, LL_RESERVED_SPACE(dev));
+	skb_reserve(skb, hlen);
 	skb_reset_network_header(skb);
 
 	data = ph.raw + po->tp_hdrlen - sizeof(struct sockaddr_ll);
@@ -2053,6 +2052,7 @@ static int tpacket_snd(struct packet_sock *po, struct msghdr *msg)
 	unsigned char *addr;
 	int len_sum = 0;
 	int status = 0;
+	int hlen, tlen;
 
 	mutex_lock(&po->pg_vec_lock);
 
@@ -2101,16 +2101,17 @@ static int tpacket_snd(struct packet_sock *po, struct msghdr *msg)
 		}
 
 		status = TP_STATUS_SEND_REQUEST;
+		hlen = LL_RESERVED_SPACE(dev);
+		tlen = dev->needed_tailroom;
 		skb = sock_alloc_send_skb(&po->sk,
-				LL_ALLOCATED_SPACE(dev)
-				+ sizeof(struct sockaddr_ll),
+				hlen + tlen + sizeof(struct sockaddr_ll),
 				0, &err);
 
 		if (unlikely(skb == NULL))
 			goto out_status;
 
 		tp_len = tpacket_fill_skb(po, skb, ph, dev, size_max, proto,
-				addr);
+				addr, hlen);
 
 		if (unlikely(tp_len < 0)) {
 			if (po->tp_loss) {
@@ -2167,10 +2168,10 @@ out:
 	return err;
 }
 
-static inline struct sk_buff *packet_alloc_skb(struct sock *sk, size_t prepad,
-					       size_t reserve, size_t len,
-					       size_t linear, int noblock,
-					       int *err)
+static struct sk_buff *packet_alloc_skb(struct sock *sk, size_t prepad,
+				        size_t reserve, size_t len,
+				        size_t linear, int noblock,
+				        int *err)
 {
 	struct sk_buff *skb;
 
@@ -2207,6 +2208,7 @@ static int packet_snd(struct socket *sock,
 	int vnet_hdr_len;
 	struct packet_sock *po = pkt_sk(sk);
 	unsigned short gso_type = 0;
+	int hlen, tlen;
 
 	/*
 	 *	Get and verify the address.
@@ -2291,8 +2293,9 @@ static int packet_snd(struct socket *sock,
 		goto out_unlock;
 
 	err = -ENOBUFS;
-	skb = packet_alloc_skb(sk, LL_ALLOCATED_SPACE(dev),
-			       LL_RESERVED_SPACE(dev), len, vnet_hdr.hdr_len,
+	hlen = LL_RESERVED_SPACE(dev);
+	tlen = dev->needed_tailroom;
+	skb = packet_alloc_skb(sk, hlen + tlen, hlen, len, vnet_hdr.hdr_len,
 			       msg->msg_flags & MSG_DONTWAIT, &err);
 	if (skb == NULL)
 		goto out_unlock;
@@ -2450,8 +2453,12 @@ static int packet_do_bind(struct sock *sk, struct net_device *dev, __be16 protoc
 {
 	struct packet_sock *po = pkt_sk(sk);
 
-	if (po->fanout)
+	if (po->fanout) {
+		if (dev)
+			dev_put(dev);
+
 		return -EINVAL;
+	}
 
 	lock_sock(sk);
 
@@ -3494,7 +3501,7 @@ static void free_pg_vec(struct pgv *pg_vec, unsigned int order,
 	kfree(pg_vec);
 }
 
-static inline char *alloc_one_pg_vec_page(unsigned long order)
+static char *alloc_one_pg_vec_page(unsigned long order)
 {
 	char *buffer = NULL;
 	gfp_t gfp_flags = GFP_KERNEL | __GFP_COMP |

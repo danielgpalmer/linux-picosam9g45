@@ -31,6 +31,7 @@
 #include <net/tcp_states.h>
 
 #include <linux/phonet.h>
+#include <linux/export.h>
 #include <net/phonet/phonet.h>
 #include <net/phonet/pep.h>
 #include <net/phonet/pn_dev.h>
@@ -679,7 +680,7 @@ int pn_sock_bind_res(struct sock *sk, u8 res)
 	mutex_lock(&resource_mutex);
 	if (pnres.sk[res] == NULL) {
 		sock_hold(sk);
-		RCU_INIT_POINTER(pnres.sk[res], sk);
+		rcu_assign_pointer(pnres.sk[res], sk);
 		ret = 0;
 	}
 	mutex_unlock(&resource_mutex);

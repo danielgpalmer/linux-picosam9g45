@@ -31,6 +31,7 @@
 #include <asm/mach-types.h>
 #include <mach/hardware.h>
 #include <linux/gpio.h>
+#include <linux/module.h>
 #include <plat/mcbsp.h>
 
 #include "omap-mcbsp.h"
@@ -288,6 +289,7 @@ static struct snd_soc_dai_link n810_dai = {
 /* Audio machine driver */
 static struct snd_soc_card snd_soc_n810 = {
 	.name = "N810",
+	.owner = THIS_MODULE,
 	.dai_link = &n810_dai,
 	.num_links = 1,
 

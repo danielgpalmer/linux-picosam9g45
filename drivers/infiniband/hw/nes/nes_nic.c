@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2009 Intel Corporation.  All rights reserved.
+ * Copyright (c) 2006 - 2011 Intel Corporation.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -1091,6 +1091,8 @@ static const char nes_ethtool_stringset[][ETH_GSTRING_LEN] = {
 	"LRO aggregated",
 	"LRO flushed",
 	"LRO no_desc",
+	"PAU CreateQPs",
+	"PAU DestroyQPs",
 };
 #define NES_ETHTOOL_STAT_COUNT  ARRAY_SIZE(nes_ethtool_stringset)
 
@@ -1306,6 +1308,8 @@ static void nes_netdev_get_ethtool_stats(struct net_device *netdev,
 	target_stat_values[++index] = nesvnic->lro_mgr.stats.aggregated;
 	target_stat_values[++index] = nesvnic->lro_mgr.stats.flushed;
 	target_stat_values[++index] = nesvnic->lro_mgr.stats.no_desc;
+	target_stat_values[++index] = atomic_read(&pau_qps_created);
+	target_stat_values[++index] = atomic_read(&pau_qps_destroyed);
 }
 
 /**
@@ -1585,7 +1589,7 @@ static const struct ethtool_ops nes_ethtool_ops = {
 	.set_pauseparam = nes_netdev_set_pauseparam,
 };
 
-static void nes_vlan_mode(struct net_device *netdev, struct nes_device *nesdev, u32 features)
+static void nes_vlan_mode(struct net_device *netdev, struct nes_device *nesdev, netdev_features_t features)
 {
 	struct nes_adapter *nesadapter = nesdev->nesadapter;
 	u32 u32temp;
@@ -1606,7 +1610,7 @@ static void nes_vlan_mode(struct net_device *netdev, struct nes_device *nesdev, 
 	spin_unlock_irqrestore(&nesadapter->phy_lock, flags);
 }
 
-static u32 nes_fix_features(struct net_device *netdev, u32 features)
+static netdev_features_t nes_fix_features(struct net_device *netdev, netdev_features_t features)
 {
 	/*
 	 * Since there is no support for separate rx/tx vlan accel
@@ -1620,7 +1624,7 @@ static u32 nes_fix_features(struct net_device *netdev, u32 features)
 	return features;
 }
 
-static int nes_set_features(struct net_device *netdev, u32 features)
+static int nes_set_features(struct net_device *netdev, netdev_features_t features)
 {
 	struct nes_vnic *nesvnic = netdev_priv(netdev);
 	struct nes_device *nesdev = nesvnic->nesdev;

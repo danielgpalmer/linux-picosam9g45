@@ -11,6 +11,7 @@
  *
  */
 
+#include <linux/module.h>
 #include <sound/soc.h>
 #include <sound/jack.h>
 
@@ -243,6 +244,7 @@ static struct snd_soc_dai_link goni_dai[] = {
 
 static struct snd_soc_card goni = {
 	.name = "goni",
+	.owner = THIS_MODULE,
 	.dai_link = goni_dai,
 	.num_links = ARRAY_SIZE(goni_dai),
 

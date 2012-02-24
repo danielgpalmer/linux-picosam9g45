@@ -8,6 +8,7 @@
  */
 #include <linux/kernel.h>
 #include <linux/slab.h>
+#include <linux/export.h>
 #include <asm/qdio.h>
 
 #include "cio.h"
@@ -21,12 +22,9 @@
 static struct kmem_cache *qdio_q_cache;
 static struct kmem_cache *qdio_aob_cache;
 
-struct qaob *qdio_allocate_aob()
+struct qaob *qdio_allocate_aob(void)
 {
-	struct qaob *aob;
-
-	aob = kmem_cache_zalloc(qdio_aob_cache, GFP_ATOMIC);
-	return aob;
+	return kmem_cache_zalloc(qdio_aob_cache, GFP_ATOMIC);
 }
 EXPORT_SYMBOL_GPL(qdio_allocate_aob);
 
@@ -179,7 +177,8 @@ static void setup_queues(struct qdio_irq *irq_ptr,
 		setup_queues_misc(q, irq_ptr, qdio_init->input_handler, i);
 
 		q->is_input_q = 1;
-		q->u.in.queue_start_poll = qdio_init->queue_start_poll[i];
+		q->u.in.queue_start_poll = qdio_init->queue_start_poll_array ?
+				qdio_init->queue_start_poll_array[i] : NULL;
 
 		setup_storage_lists(q, irq_ptr, input_sbal_array, i);
 		input_sbal_array += QDIO_MAX_BUFFERS_PER_Q;

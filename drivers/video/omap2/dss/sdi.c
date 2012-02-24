@@ -23,6 +23,7 @@
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/regulator/consumer.h>
+#include <linux/export.h>
 
 #include <video/omapdss.h>
 #include "dss.h"
@@ -122,10 +123,14 @@ int omapdss_sdi_display_enable(struct omap_dss_device *dssdev)
 		goto err_sdi_enable;
 	mdelay(2);
 
-	dssdev->manager->enable(dssdev->manager);
+	r = dss_mgr_enable(dssdev->manager);
+	if (r)
+		goto err_mgr_enable;
 
 	return 0;
 
+err_mgr_enable:
+	dss_sdi_disable();
 err_sdi_enable:
 err_set_dispc_clock_div:
 err_set_dss_clock_div:
@@ -144,7 +149,7 @@ EXPORT_SYMBOL(omapdss_sdi_display_enable);
 
 void omapdss_sdi_display_disable(struct omap_dss_device *dssdev)
 {
-	dssdev->manager->disable(dssdev->manager);
+	dss_mgr_disable(dssdev->manager);
 
 	dss_sdi_disable();
 

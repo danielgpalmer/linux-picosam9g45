@@ -24,6 +24,7 @@
 
 #include <linux/kernel.h>
 #include <linux/delay.h>
+#include <linux/export.h>
 #include <linux/err.h>
 #include <linux/errno.h>
 #include <linux/platform_device.h>
@@ -179,6 +180,11 @@ int omapdss_dpi_display_enable(struct omap_dss_device *dssdev)
 {
 	int r;
 
+	if (cpu_is_omap34xx() && !dpi.vdds_dsi_reg) {
+		DSSERR("no VDSS_DSI regulator\n");
+		return -ENODEV;
+	}
+
 	if (dssdev->manager == NULL) {
 		DSSERR("failed to enable display: no manager\n");
 		return -ENODEV;
@@ -222,10 +228,13 @@ int omapdss_dpi_display_enable(struct omap_dss_device *dssdev)
 
 	mdelay(2);
 
-	dssdev->manager->enable(dssdev->manager);
+	r = dss_mgr_enable(dssdev->manager);
+	if (r)
+		goto err_mgr_enable;
 
 	return 0;
 
+err_mgr_enable:
 err_set_mode:
 	if (dpi_use_dsi_pll(dssdev))
 		dsi_pll_uninit(dpi.dsidev, true);
@@ -248,7 +257,7 @@ EXPORT_SYMBOL(omapdss_dpi_display_enable);
 
 void omapdss_dpi_display_disable(struct omap_dss_device *dssdev)
 {
-	dssdev->manager->disable(dssdev->manager);
+	dss_mgr_disable(dssdev->manager);
 
 	if (dpi_use_dsi_pll(dssdev)) {
 		dss_select_dispc_clk_source(OMAP_DSS_CLK_SRC_FCK);

@@ -26,6 +26,7 @@
 #include <asm/cacheflush.h>
 #include <linux/clk.h>
 #include <linux/mm.h>
+#include <linux/module.h>
 #include <linux/pagemap.h>
 #include <linux/scatterlist.h>
 #include <linux/sched.h>
@@ -210,13 +211,13 @@ static void isp_video_pix_to_mbus(const struct v4l2_pix_format *pix,
 	mbus->width = pix->width;
 	mbus->height = pix->height;
 
-	for (i = 0; i < ARRAY_SIZE(formats); ++i) {
+	/* Skip the last format in the loop so that it will be selected if no
+	 * match is found.
+	 */
+	for (i = 0; i < ARRAY_SIZE(formats) - 1; ++i) {
 		if (formats[i].pixelformat == pix->pixelformat)
 			break;
 	}
-
-	if (WARN_ON(i == ARRAY_SIZE(formats)))
-		return;
 
 	mbus->code = formats[i].code;
 	mbus->colorspace = pix->colorspace;
@@ -452,7 +453,7 @@ ispmmu_vmap(struct isp_device *isp, const struct scatterlist *sglist, int sglen)
 	sgt->nents = sglen;
 	sgt->orig_nents = sglen;
 
-	da = omap_iommu_vmap(isp->domain, isp->iommu, 0, sgt, IOMMU_FLAG);
+	da = omap_iommu_vmap(isp->domain, isp->dev, 0, sgt, IOMMU_FLAG);
 	if (IS_ERR_VALUE(da))
 		kfree(sgt);
 
@@ -468,7 +469,7 @@ static void ispmmu_vunmap(struct isp_device *isp, dma_addr_t da)
 {
 	struct sg_table *sgt;
 
-	sgt = omap_iommu_vunmap(isp->domain, isp->iommu, (u32)da);
+	sgt = omap_iommu_vunmap(isp->domain, isp->dev, (u32)da);
 	kfree(sgt);
 }
 
@@ -580,21 +581,20 @@ static const struct isp_video_queue_operations isp_video_queue_ops = {
 /*
  * omap3isp_video_buffer_next - Complete the current buffer and return the next
  * @video: ISP video object
- * @error: Whether an error occurred during capture
  *
  * Remove the current video buffer from the DMA queue and fill its timestamp,
  * field count and state fields before waking up its completion handler.
  *
- * The buffer state is set to VIDEOBUF_DONE if no error occurred (@error is 0)
- * or VIDEOBUF_ERROR otherwise (@error is non-zero).
+ * For capture video nodes the buffer state is set to ISP_BUF_STATE_DONE if no
+ * error has been flagged in the pipeline, or to ISP_BUF_STATE_ERROR otherwise.
+ * For video output nodes the buffer state is always set to ISP_BUF_STATE_DONE.
  *
  * The DMA queue is expected to contain at least one buffer.
  *
  * Return a pointer to the next buffer in the DMA queue, or NULL if the queue is
  * empty.
  */
-struct isp_buffer *omap3isp_video_buffer_next(struct isp_video *video,
-					      unsigned int error)
+struct isp_buffer *omap3isp_video_buffer_next(struct isp_video *video)
 {
 	struct isp_pipeline *pipe = to_isp_pipeline(&video->video.entity);
 	struct isp_video_queue *queue = video->queue;
@@ -629,7 +629,13 @@ struct isp_buffer *omap3isp_video_buffer_next(struct isp_video *video,
 	else
 		buf->vbuf.sequence = atomic_read(&pipe->frame_number);
 
-	buf->state = error ? ISP_BUF_STATE_ERROR : ISP_BUF_STATE_DONE;
+	/* Report pipeline errors to userspace on the capture device side. */
+	if (queue->type == V4L2_BUF_TYPE_VIDEO_CAPTURE && pipe->error) {
+		buf->state = ISP_BUF_STATE_ERROR;
+		pipe->error = false;
+	} else {
+		buf->state = ISP_BUF_STATE_DONE;
+	}
 
 	wake_up(&buf->wait);
 
@@ -1015,6 +1021,8 @@ isp_video_streamon(struct file *file, void *fh, enum v4l2_buf_type type)
 	if (ret < 0)
 		goto error;
 
+	pipe->error = false;
+
 	spin_lock_irqsave(&pipe->lock, flags);
 	pipe->state &= ~ISP_PIPELINE_STREAM;
 	pipe->state |= state;
@@ -1325,6 +1333,13 @@ int omap3isp_video_init(struct isp_video *video, const char *name)
 	return 0;
 }
 
+void omap3isp_video_cleanup(struct isp_video *video)
+{
+	media_entity_cleanup(&video->video.entity);
+	mutex_destroy(&video->stream_lock);
+	mutex_destroy(&video->mutex);
+}
+
 int omap3isp_video_register(struct isp_video *video, struct v4l2_device *vdev)
 {
 	int ret;
@@ -1341,8 +1356,6 @@ int omap3isp_video_register(struct isp_video *video, struct v4l2_device *vdev)
 
 void omap3isp_video_unregister(struct isp_video *video)
 {
-	if (video_is_registered(&video->video)) {
-		media_entity_cleanup(&video->video.entity);
+	if (video_is_registered(&video->video))
 		video_unregister_device(&video->video);
-	}
 }

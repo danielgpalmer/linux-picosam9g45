@@ -37,6 +37,7 @@
 
 /* Register descriptions for twl4030 codec part */
 #include <linux/mfd/twl4030-audio.h>
+#include <linux/module.h>
 
 #include "omap-mcbsp.h"
 #include "omap-pcm.h"
@@ -212,6 +213,7 @@ static struct snd_soc_dai_link sdp3430_dai[] = {
 /* Audio machine driver */
 static struct snd_soc_card snd_soc_sdp3430 = {
 	.name = "SDP3430",
+	.owner = THIS_MODULE,
 	.dai_link = sdp3430_dai,
 	.num_links = ARRAY_SIZE(sdp3430_dai),
 

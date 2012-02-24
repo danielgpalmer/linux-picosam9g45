@@ -26,6 +26,7 @@
 #include <mach/hardware.h>
 #include <asm/hardware/sa1111.h>
 #include <asm/irq.h>
+#include <asm/page.h>
 #include <asm/mach-types.h>
 #include <asm/setup.h>
 #include <asm/mach/arch.h>
@@ -372,4 +373,5 @@ MACHINE_START(JORNADA720, "HP Jornada 720")
 #ifdef CONFIG_SA1111
 	.dma_zone_size	= SZ_1M,
 #endif
+	.restart	= sa11x0_restart,
 MACHINE_END

@@ -15,6 +15,7 @@
 
 #include <linux/types.h>
 #include <linux/gpio.h>
+#include <linux/module.h>
 
 #include <sound/soc.h>
 #include <sound/jack.h>
@@ -214,6 +215,7 @@ static struct snd_soc_dai_link h1940_uda1380_dai[] = {
 
 static struct snd_soc_card h1940_asoc = {
 	.name = "h1940",
+	.owner = THIS_MODULE,
 	.dai_link = h1940_uda1380_dai,
 	.num_links = ARRAY_SIZE(h1940_uda1380_dai),
 

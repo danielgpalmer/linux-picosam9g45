@@ -144,7 +144,7 @@ static struct davinci_nand_pdata nand_config = {
 	.parts		= nand_partitions,
 	.nr_parts	= ARRAY_SIZE(nand_partitions),
 	.ecc_mode	= NAND_ECC_HW,
-	.options	= NAND_USE_FLASH_BBT,
+	.bbt_options	= NAND_BBT_USE_FLASH,
 	.ecc_bits	= 1,
 };
 
@@ -283,4 +283,5 @@ MACHINE_START(TNETV107X, "TNETV107X EVM")
 	.timer		= &davinci_timer,
 	.init_machine	= tnetv107x_evm_board_init,
 	.dma_zone_size	= SZ_128M,
+	.restart	= tnetv107x_restart,
 MACHINE_END

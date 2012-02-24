@@ -29,6 +29,7 @@
 #define VMWGFX_KMS_H_
 
 #include "drmP.h"
+#include "drm_crtc_helper.h"
 #include "vmwgfx_drv.h"
 
 #define VMWGFX_NUM_DISPLAY_UNITS 8
@@ -62,8 +63,13 @@ struct vmw_framebuffer {
 int vmw_cursor_update_image(struct vmw_private *dev_priv,
 			    u32 *image, u32 width, u32 height,
 			    u32 hotspotX, u32 hotspotY);
+int vmw_cursor_update_dmabuf(struct vmw_private *dev_priv,
+			     struct vmw_dma_buffer *dmabuf,
+			     u32 width, u32 height,
+			     u32 hotspotX, u32 hotspotY);
 void vmw_cursor_update_position(struct vmw_private *dev_priv,
 				bool show, int x, int y);
+
 
 /**
  * Base class display unit.
@@ -96,6 +102,13 @@ struct vmw_display_unit {
 	unsigned pref_height;
 	bool pref_active;
 	struct drm_display_mode *pref_mode;
+
+	/*
+	 * Gui positioning
+	 */
+	int gui_x;
+	int gui_y;
+	bool is_implicit;
 };
 
 #define vmw_crtc_to_du(x) \
@@ -126,8 +139,7 @@ int vmw_du_connector_fill_modes(struct drm_connector *connector,
 int vmw_du_connector_set_property(struct drm_connector *connector,
 				  struct drm_property *property,
 				  uint64_t val);
-int vmw_du_update_layout(struct vmw_private *dev_priv, unsigned num,
-			 struct drm_vmw_rect *rects);
+
 
 /*
  * Legacy display unit functions - vmwgfx_ldu.c

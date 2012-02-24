@@ -180,8 +180,8 @@ struct ext3_group_desc
 
 /* Flags that should be inherited by new inodes from their parent. */
 #define EXT3_FL_INHERITED (EXT3_SECRM_FL | EXT3_UNRM_FL | EXT3_COMPR_FL |\
-			   EXT3_SYNC_FL | EXT3_IMMUTABLE_FL | EXT3_APPEND_FL |\
-			   EXT3_NODUMP_FL | EXT3_NOATIME_FL | EXT3_COMPRBLK_FL|\
+			   EXT3_SYNC_FL | EXT3_NODUMP_FL |\
+			   EXT3_NOATIME_FL | EXT3_COMPRBLK_FL |\
 			   EXT3_NOCOMPR_FL | EXT3_JOURNAL_DATA_FL |\
 			   EXT3_NOTAIL_FL | EXT3_DIRSYNC_FL)
 
@@ -381,7 +381,7 @@ struct ext3_inode {
  * Mount flags
  */
 #define EXT3_MOUNT_CHECK		0x00001	/* Do mount-time checks */
-#define EXT3_MOUNT_OLDALLOC		0x00002  /* Don't use the new Orlov allocator */
+/* EXT3_MOUNT_OLDALLOC was there */
 #define EXT3_MOUNT_GRPID		0x00004	/* Create files with directory's group */
 #define EXT3_MOUNT_DEBUG		0x00008	/* Some debugging messages */
 #define EXT3_MOUNT_ERRORS_CONT		0x00010	/* Continue on errors */
@@ -884,7 +884,7 @@ extern int ext3fs_dirhash(const char *name, int len, struct
 
 /* ialloc.c */
 extern struct inode * ext3_new_inode (handle_t *, struct inode *,
-				      const struct qstr *, int);
+				      const struct qstr *, umode_t);
 extern void ext3_free_inode (handle_t *, struct inode *);
 extern struct inode * ext3_orphan_get (struct super_block *, unsigned long);
 extern unsigned long ext3_count_free_inodes (struct super_block *);

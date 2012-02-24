@@ -4,7 +4,6 @@
 #include <linux/netdevice.h>
 #include <linux/types.h>
 #include <linux/rcupdate.h>
-#include <linux/module.h>
 #include <linux/pkt_sched.h>
 #include <linux/pkt_cls.h>
 #include <net/gen_stats.h>
@@ -221,8 +220,15 @@ struct tcf_proto {
 
 struct qdisc_skb_cb {
 	unsigned int		pkt_len;
-	long			data[];
+	unsigned char		data[24];
 };
+
+static inline void qdisc_cb_private_validate(const struct sk_buff *skb, int sz)
+{
+	struct qdisc_skb_cb *qcb;
+	BUILD_BUG_ON(sizeof(skb->cb) < sizeof(unsigned int) + sz);
+	BUILD_BUG_ON(sizeof(qcb->data) < sz);
+}
 
 static inline int qdisc_qlen(const struct Qdisc *q)
 {

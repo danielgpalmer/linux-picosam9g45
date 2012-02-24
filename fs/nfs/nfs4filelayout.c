@@ -31,6 +31,7 @@
 
 #include <linux/nfs_fs.h>
 #include <linux/nfs_page.h>
+#include <linux/module.h>
 
 #include "internal.h"
 #include "nfs4filelayout.h"
@@ -48,13 +49,14 @@ filelayout_get_dense_offset(struct nfs4_filelayout_segment *flseg,
 			    loff_t offset)
 {
 	u32 stripe_width = flseg->stripe_unit * flseg->dsaddr->stripe_count;
-	u64 tmp;
+	u64 stripe_no;
+	u32 rem;
 
 	offset -= flseg->pattern_offset;
-	tmp = offset;
-	do_div(tmp, stripe_width);
+	stripe_no = div_u64(offset, stripe_width);
+	div_u64_rem(offset, flseg->stripe_unit, &rem);
 
-	return tmp * flseg->stripe_unit + do_div(offset, flseg->stripe_unit);
+	return stripe_no * flseg->stripe_unit + rem;
 }
 
 /* This function is used by the layout driver to calculate the
@@ -449,9 +451,8 @@ filelayout_check_layout(struct pnfs_layout_hdr *lo,
 
 	fl->dsaddr = dsaddr;
 
-	if (fl->first_stripe_index < 0 ||
-	    fl->first_stripe_index >= dsaddr->stripe_count) {
-		dprintk("%s Bad first_stripe_index %d\n",
+	if (fl->first_stripe_index >= dsaddr->stripe_count) {
+		dprintk("%s Bad first_stripe_index %u\n",
 				__func__, fl->first_stripe_index);
 		goto out_put;
 	}
@@ -552,7 +553,7 @@ filelayout_decode_layout(struct pnfs_layout_hdr *flo,
 
 	/* Note that a zero value for num_fh is legal for STRIPE_SPARSE.
 	 * Futher checking is done in filelayout_check_layout */
-	if (fl->num_fh < 0 || fl->num_fh >
+	if (fl->num_fh >
 	    max(NFS4_PNFS_MAX_STRIPE_CNT, NFS4_PNFS_MAX_MULTI_CNT))
 		goto out_err;
 

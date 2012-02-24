@@ -19,6 +19,7 @@
 #include <linux/leds.h>
 #include <linux/platform_device.h>
 #include <linux/serial_8250.h>
+#include <linux/export.h>
 
 #include <media/soc_camera.h>
 
@@ -34,7 +35,7 @@
 #include <plat/mux.h>
 #include <plat/usb.h>
 #include <plat/board.h>
-#include <plat/common.h>
+#include "common.h"
 #include <mach/camera.h>
 
 #include <mach/ams-delta-fiq.h>
@@ -132,12 +133,6 @@ void ams_delta_latch2_write(u16 mask, u16 value)
 	ams_delta_latch2_reg &= ~mask;
 	ams_delta_latch2_reg |= value;
 	*(volatile __u16 *) AMS_DELTA_LATCH2_VIRT = ams_delta_latch2_reg;
-}
-
-static void __init ams_delta_init_irq(void)
-{
-	omap1_init_common_hw();
-	omap1_init_irq();
 }
 
 static struct map_desc ams_delta_io_desc[] __initdata = {
@@ -307,8 +302,6 @@ static void __init ams_delta_init(void)
 	omap_cfg_reg(J19_1610_CAM_D6);
 	omap_cfg_reg(J18_1610_CAM_D7);
 
-	iotable_init(ams_delta_io_desc, ARRAY_SIZE(ams_delta_io_desc));
-
 	omap_board_config = ams_delta_config;
 	omap_board_config_size = ARRAY_SIZE(ams_delta_config);
 	omap_serial_init();
@@ -380,17 +373,20 @@ arch_initcall(ams_delta_modem_init);
 
 static void __init ams_delta_map_io(void)
 {
-	omap1_map_common_io();
+	omap15xx_map_io();
+	iotable_init(ams_delta_io_desc, ARRAY_SIZE(ams_delta_io_desc));
 }
 
 MACHINE_START(AMS_DELTA, "Amstrad E3 (Delta)")
 	/* Maintainer: Jonathan McDowell <noodles@earth.li> */
 	.atag_offset	= 0x100,
 	.map_io		= ams_delta_map_io,
+	.init_early	= omap1_init_early,
 	.reserve	= omap_reserve,
-	.init_irq	= ams_delta_init_irq,
+	.init_irq	= omap1_init_irq,
 	.init_machine	= ams_delta_init,
 	.timer		= &omap1_timer,
+	.restart	= omap1_restart,
 MACHINE_END
 
 EXPORT_SYMBOL(ams_delta_latch1_write);

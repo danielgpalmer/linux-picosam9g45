@@ -34,6 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <linux/export.h>
 #include <net/sock.h>
 
 #include "core.h"
@@ -183,9 +184,6 @@ static int tipc_create(struct net *net, struct socket *sock, int protocol,
 	struct tipc_port *tp_ptr;
 
 	/* Validate arguments */
-
-	if (!net_eq(net, &init_net))
-		return -EAFNOSUPPORT;
 
 	if (unlikely(protocol != 0))
 		return -EPROTONOSUPPORT;

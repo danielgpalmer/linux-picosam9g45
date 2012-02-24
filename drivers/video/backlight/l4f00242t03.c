@@ -14,6 +14,7 @@
 #include <linux/device.h>
 #include <linux/kernel.h>
 #include <linux/delay.h>
+#include <linux/module.h>
 #include <linux/gpio.h>
 #include <linux/lcd.h>
 #include <linux/slab.h>
@@ -189,6 +190,7 @@ static int __devinit l4f00242t03_probe(struct spi_device *spi)
 
 	priv->io_reg = regulator_get(&spi->dev, "vdd");
 	if (IS_ERR(priv->io_reg)) {
+		ret = PTR_ERR(priv->io_reg);
 		dev_err(&spi->dev, "%s: Unable to get the IO regulator\n",
 		       __func__);
 		goto err3;
@@ -196,6 +198,7 @@ static int __devinit l4f00242t03_probe(struct spi_device *spi)
 
 	priv->core_reg = regulator_get(&spi->dev, "vcore");
 	if (IS_ERR(priv->core_reg)) {
+		ret = PTR_ERR(priv->core_reg);
 		dev_err(&spi->dev, "%s: Unable to get the core regulator\n",
 		       __func__);
 		goto err4;

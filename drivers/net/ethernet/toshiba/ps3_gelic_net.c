@@ -640,7 +640,7 @@ static inline void gelic_card_disable_rxdmac(struct gelic_card *card)
 	int status;
 
 	/* this hvc blocks until the DMA in progress really stopped */
-	status = lv1_net_stop_rx_dma(bus_id(card), dev_id(card), 0);
+	status = lv1_net_stop_rx_dma(bus_id(card), dev_id(card));
 	if (status)
 		dev_err(ctodev(card),
 			"lv1_net_stop_rx_dma failed, %d\n", status);
@@ -658,7 +658,7 @@ static inline void gelic_card_disable_txdmac(struct gelic_card *card)
 	int status;
 
 	/* this hvc blocks until the DMA in progress really stopped */
-	status = lv1_net_stop_tx_dma(bus_id(card), dev_id(card), 0);
+	status = lv1_net_stop_tx_dma(bus_id(card), dev_id(card));
 	if (status)
 		dev_err(ctodev(card),
 			"lv1_net_stop_tx_dma failed, status=%d\n", status);
@@ -1674,6 +1674,9 @@ static int __devinit ps3_gelic_driver_probe(struct ps3_system_bus_device *dev)
 	int result;
 
 	pr_debug("%s: called\n", __func__);
+
+	udbg_shutdown_ps3gelic();
+
 	result = ps3_open_hv_device(dev);
 
 	if (result) {

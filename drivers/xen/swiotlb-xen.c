@@ -35,6 +35,7 @@
 
 #include <linux/bootmem.h>
 #include <linux/dma-mapping.h>
+#include <linux/export.h>
 #include <xen/swiotlb-xen.h>
 #include <xen/page.h>
 #include <xen/xen-ops.h>
@@ -152,7 +153,7 @@ void __init xen_swiotlb_init(int verbose)
 	char *m = NULL;
 	unsigned int repeat = 3;
 
-	nr_tbl = swioltb_nr_tbl();
+	nr_tbl = swiotlb_nr_tbl();
 	if (nr_tbl)
 		xen_io_tlb_nslabs = nr_tbl;
 	else {
@@ -165,7 +166,7 @@ retry:
 	/*
 	 * Get IO TLB memory from any location.
 	 */
-	xen_io_tlb_start = alloc_bootmem(bytes);
+	xen_io_tlb_start = alloc_bootmem_pages(PAGE_ALIGN(bytes));
 	if (!xen_io_tlb_start) {
 		m = "Cannot allocate Xen-SWIOTLB buffer!\n";
 		goto error;
@@ -178,7 +179,7 @@ retry:
 			       bytes,
 			       xen_io_tlb_nslabs);
 	if (rc) {
-		free_bootmem(__pa(xen_io_tlb_start), bytes);
+		free_bootmem(__pa(xen_io_tlb_start), PAGE_ALIGN(bytes));
 		m = "Failed to get contiguous memory for DMA from Xen!\n"\
 		    "You either: don't have the permissions, do not have"\
 		    " enough free memory under 4GB, or the hypervisor memory"\

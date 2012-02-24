@@ -40,6 +40,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/jiffies.h>
 #include <linux/prefetch.h>
+#include <linux/export.h>
 #include <net/ipv6.h>
 #include <net/tcp.h>
 #include "cxgb4.h"
@@ -490,7 +491,7 @@ static unsigned int refill_fl(struct adapter *adap, struct sge_fl *q, int n,
 	__be64 *d = &q->desc[q->pidx];
 	struct rx_sw_desc *sd = &q->sdesc[q->pidx];
 
-	gfp |= __GFP_NOWARN;         /* failures are expected */
+	gfp |= __GFP_NOWARN | __GFP_COLD;
 
 #if FL_PG_ORDER > 0
 	/*
@@ -527,7 +528,7 @@ static unsigned int refill_fl(struct adapter *adap, struct sge_fl *q, int n,
 #endif
 
 	while (n--) {
-		pg = __netdev_alloc_page(adap->port[0], gfp);
+		pg = alloc_page(gfp);
 		if (unlikely(!pg)) {
 			q->alloc_failed++;
 			break;
@@ -536,7 +537,7 @@ static unsigned int refill_fl(struct adapter *adap, struct sge_fl *q, int n,
 		mapping = dma_map_page(adap->pdev_dev, pg, 0, PAGE_SIZE,
 				       PCI_DMA_FROMDEVICE);
 		if (unlikely(dma_mapping_error(adap->pdev_dev, mapping))) {
-			netdev_free_page(adap->port[0], pg);
+			put_page(pg);
 			goto out;
 		}
 		*d++ = cpu_to_be64(mapping);
