@@ -61,11 +61,7 @@ config HW_RANDOM_AMD
 	  If unsure, say Y.
 
 config HW_RANDOM_ATMEL
-<<<<<<< HEAD
-	tristate "Atmel Random Number Generator support"	
-=======
 	tristate "Atmel Random Number Generator support"
->>>>>>> 45196cee28a5bcfb6ddbe2bffa4270cbed66ae4b
 	depends on HW_RANDOM && ARCH_AT91SAM9G45
 	default HW_RANDOM
 	---help---

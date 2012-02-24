@@ -333,14 +333,11 @@ static inline int of_alias_get_id(struct device_node *np, const char *stem)
 	return -ENOSYS;
 }
 
-<<<<<<< HEAD
-=======
 static inline int of_machine_is_compatible(const char *compat)
 {
 	return 0;
 }
 
->>>>>>> 45196cee28a5bcfb6ddbe2bffa4270cbed66ae4b
 #define of_match_ptr(_ptr)	NULL
 #define of_match_node(_matches, _node)	NULL
 #endif /* CONFIG_OF */
