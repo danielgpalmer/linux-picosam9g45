@@ -477,15 +477,9 @@ static void __init picosam9g45_board_init(void)
 	at91_add_device_usbh_ohci(&picosam9g45_usbh_hs_data);
 	at91_add_device_usbh_ehci(&picosam9g45_usbh_hs_data);
 	/* USB HS Device */
-<<<<<<< HEAD
-	at91_add_device_usba(&ek_usba_udc_data);
-	/* SPI */
-        at91_add_device_spi(picosam9g45_spi_devices, ARRAY_SIZE(picosam9g45_spi_devices));
-=======
 	at91_add_device_usba(&picosam9g45_usba_udc_data);
 	/* SPI */
 	at91_add_device_spi(picosam9g45_spi_devices, ARRAY_SIZE(picosam9g45_spi_devices));
->>>>>>> b07fa053318d30fd2b5ac8a09c16390a89e2d109
 	/* MMC */
 	at91_add_device_mci(0, &mci0_data);
 	at91_add_device_mci(1, &mci1_data);
@@ -511,7 +505,7 @@ static void __init picosam9g45_board_init(void)
 	at91_pwm_leds(picosam9g45_pwm_led, ARRAY_SIZE(picosam9g45_pwm_led));
 }
 
-MACHINE_START(MINIBOXPICOSAM9G45, "Mini Box picoSAM9 G45 Board")
+MACHINE_START(PICOSAM9G45, "Mini Box picoSAM9 G45 Board")
 	/* Maintainer: Nicu Pavel */
 	.timer		= &at91sam926x_timer,
 	.map_io		= at91_map_io,
