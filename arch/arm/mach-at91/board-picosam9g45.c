@@ -153,39 +153,6 @@ static struct mtd_partition __initdata picosam9g45_nand_partition[] = {
 	},
 };
 
-static struct mtd_partition * __init nand_partitions(int size, int *num_partitions)
-{
-	*num_partitions = ARRAY_SIZE(picosam9g45_nand_partition);
-	return picosam9g45_nand_partition;
-}
-
-/* det_pin is not connected */
-static struct atmel_nand_data __initdata picosam9g45_nand_data = {
-	.ale		= 21,
-	.cle		= 22,
-	.rdy_pin	= AT91_PIN_PC8,
-	.enable_pin	= AT91_PIN_PC14,
-	.partition_info	= nand_partitions,
-};
-
-static struct sam9_smc_config __initdata picosam9g45_nand_smc_config = {
-	.ncs_read_setup		= 0,
-	.nrd_setup		= 2,
-	.ncs_write_setup	= 0,
-	.nwe_setup		= 2,
-
-	.ncs_read_pulse		= 4,
-	.nrd_pulse		= 4,
-	.ncs_write_pulse	= 4,
-	.nwe_pulse		= 4,
-
-	.read_cycle		= 7,
-	.write_cycle		= 7,
-
-	.mode			= AT91_SMC_READMODE | AT91_SMC_WRITEMODE | AT91_SMC_EXNWMODE_DISABLE,
-	.tdf_cycles		= 3,
-};
-
 /*
  * LCD Controller
  */
