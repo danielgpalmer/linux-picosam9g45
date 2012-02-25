@@ -131,28 +131,6 @@ static struct macb_platform_data __initdata picosam9g45_macb_data = {
 	.is_rmii	= 1,
 };
 
-
-/*
- * NAND flash
- */
-static struct mtd_partition __initdata picosam9g45_nand_partition[] = {
-	{
-		.name   = "Bootstrap",
-		.offset = 0,
-		.size   = SZ_4M
-	},
-	{
-		.name= "RootFS",
-		.offset= MTDPART_OFS_NXTBLK,
-		.size= 60 * SZ_1M,
-	},
-	{
-		.name= "Space",
-		.offset= MTDPART_OFS_NXTBLK,
-		.size= MTDPART_SIZ_FULL,
-	},
-};
-
 /*
  * LCD Controller
  */
