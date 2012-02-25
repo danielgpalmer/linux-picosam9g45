@@ -25,6 +25,7 @@
 #include <linux/clk.h>
 #include <linux/dma-mapping.h>
 #include <linux/atmel-mci.h>
+#include <linux/platform_data/macb.h>
 
 #include <mach/hardware.h>
 #include <video/atmel_lcdc.h>
@@ -125,7 +126,7 @@ static struct mci_platform_data __initdata mci1_data = {
 /*
  * MACB Ethernet device
  */
-static struct at91_eth_data __initdata picosam9g45_macb_data = {
+static struct macb_platform_data __initdata picosam9g45_macb_data = {
 	.phy_irq_pin	= AT91_PIN_PD5,
 	.is_rmii	= 1,
 };
