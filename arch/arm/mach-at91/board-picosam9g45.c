@@ -186,22 +186,6 @@ static struct sam9_smc_config __initdata picosam9g45_nand_smc_config = {
 	.tdf_cycles		= 3,
 };
 
-static void __init picosam9g45_add_device_nand(void)
-{
-	picosam9g45_nand_data.bus_width_16 = board_have_nand_16bit();
-	/* setup bus-width (8 or 16) */
-	if (picosam9g45_nand_data.bus_width_16)
-		picosam9g45_nand_smc_config.mode |= AT91_SMC_DBW_16;
-	else
-		picosam9g45_nand_smc_config.mode |= AT91_SMC_DBW_8;
-
-	/* configure chip-select 3 (NAND) */
-	sam9_smc_configure(3, &picosam9g45_nand_smc_config);
-
-	at91_add_device_nand(&picosam9g45_nand_data);
-}
-
-
 /*
  * LCD Controller
  */
@@ -468,8 +452,6 @@ static void __init picosam9g45_board_init(void)
 	at91_add_device_mci(1, &mci1_data);
 	/* Ethernet */
 	at91_add_device_eth(&picosam9g45_macb_data);
-	/* NAND */
-	picosam9g45_add_device_nand();
 	/* I2C */
 	at91_add_device_i2c(0, NULL, 0);
 	at91_add_device_i2c(1, picosam9g45_i2c1_devices, ARRAY_SIZE(picosam9g45_i2c1_devices));
