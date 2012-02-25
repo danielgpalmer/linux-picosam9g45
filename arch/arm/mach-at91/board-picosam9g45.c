@@ -88,24 +88,6 @@ static struct usba_platform_data __initdata picosam9g45_usba_udc_data = {
  * SPI devices.
  */
 static struct spi_board_info picosam9g45_spi_devices[] = {
-        [0] = {/* SPI0 CS0 on right side connector J7*/
-                .modalias= "spidev",
-                .max_speed_hz= 15 * 1000 * 1000,
-                .bus_num= 0,
-                .chip_select= 0,
-        },
-        [1] = {/* SPI1 CS0 on left side connector J9*/
-                .modalias= "spidev",
-                .max_speed_hz= 15 * 1000 * 1000,
-                .bus_num= 1,
-                .chip_select= 0,
-        },
-};
-
-/*
- * SPI devices.
- */
-static struct spi_board_info picosam9g45_spi_devices[] = {
 	[0] = {/* SPI0 CS0 on right side connector J7*/
 		.modalias= "spidev",
 		.max_speed_hz= 15 * 1000 * 1000,
