@@ -111,6 +111,7 @@ static struct mci_platform_data __initdata mci0_data = {
 	.slot[0] = {
 		.bus_width	= 4,
 		.detect_pin	= AT91_PIN_PD10,
+		.wp_pin		= -EINVAL,
 	},
 };
 
