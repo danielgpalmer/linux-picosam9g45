@@ -19,12 +19,14 @@
 #include <asm/glue-df.h>
 #include <asm/glue-pf.h>
 #include <asm/vfpmacros.h>
+#ifndef CONFIG_MULTI_IRQ_HANDLER
 #include <mach/entry-macro.S>
+#endif
 #include <asm/thread_notify.h>
 #include <asm/unwind.h>
 #include <asm/unistd.h>
 #include <asm/tls.h>
-#include <asm/system.h>
+#include <asm/system_info.h>
 
 #include "entry-header.S"
 #include <asm/entry-macro-multi.S>
@@ -1101,7 +1103,6 @@ __stubs_start:
  * get out of that mode without clobbering one register.
  */
 vector_fiq:
-	disable_fiq
 	subs	pc, lr, #4
 
 /*=============================================================================

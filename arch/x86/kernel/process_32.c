@@ -41,10 +41,10 @@
 #include <linux/cpuidle.h>
 
 #include <asm/pgtable.h>
-#include <asm/system.h>
 #include <asm/ldt.h>
 #include <asm/processor.h>
 #include <asm/i387.h>
+#include <asm/fpu-internal.h>
 #include <asm/desc.h>
 #ifdef CONFIG_MATH_EMULATION
 #include <asm/math_emu.h>
@@ -58,6 +58,7 @@
 #include <asm/syscalls.h>
 #include <asm/debugreg.h>
 #include <asm/nmi.h>
+#include <asm/switch_to.h>
 
 asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
@@ -119,9 +120,7 @@ void cpu_idle(void)
 		}
 		rcu_idle_exit();
 		tick_nohz_idle_exit();
-		preempt_enable_no_resched();
-		schedule();
-		preempt_disable();
+		schedule_preempt_disabled();
 	}
 }
 
