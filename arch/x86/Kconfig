@@ -69,7 +69,6 @@ config X86
 	select HAVE_ARCH_JUMP_LABEL
 	select HAVE_TEXT_POKE_SMP
 	select HAVE_GENERIC_HARDIRQS
-	select HAVE_SPARSE_IRQ
 	select SPARSE_IRQ
 	select GENERIC_FIND_FIRST_BIT
 	select GENERIC_IRQ_PROBE
@@ -2177,6 +2176,7 @@ config IA32_AOUT
 config COMPAT
 	def_bool y
 	depends on IA32_EMULATION
+	select ARCH_WANT_OLD_COMPAT_IPC
 
 config COMPAT_FOR_U64_ALIGNMENT
 	def_bool COMPAT
