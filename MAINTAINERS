@@ -1251,7 +1251,6 @@ ATHEROS ATH5K WIRELESS DRIVER
 M:	Jiri Slaby <jirislaby@gmail.com>
 M:	Nick Kossifidis <mickflemm@gmail.com>
 M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-M:	Bob Copeland <me@bobcopeland.com>
 L:	linux-wireless@vger.kernel.org
 L:	ath5k-devel@lists.ath5k.org
 W:	http://wireless.kernel.org/en/users/Drivers/ath5k
@@ -1940,7 +1939,7 @@ F:	drivers/connector/
 
 CONTROL GROUPS (CGROUPS)
 M:	Tejun Heo <tj@kernel.org>
-M:	Li Zefan <lizf@cn.fujitsu.com>
+M:	Li Zefan <lizefan@huawei.com>
 L:	containers@lists.linux-foundation.org
 L:	cgroups@vger.kernel.org
 T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
@@ -3557,17 +3556,13 @@ L:	linux-pm@vger.kernel.org
 S:	Supported
 F:	arch/x86/platform/mrst/pmu.*
 
-INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
+INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
+M:	Stanislav Yakovlev <stas.yakovlev@gmail.com>
 L:	linux-wireless@vger.kernel.org
-S:	Orphan
+S:	Maintained
 F:	Documentation/networking/README.ipw2100
-F:	drivers/net/wireless/ipw2x00/ipw2100.*
-
-INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
-L:	linux-wireless@vger.kernel.org
-S:	Orphan
 F:	Documentation/networking/README.ipw2200
-F:	drivers/net/wireless/ipw2x00/ipw2200.*
+F:	drivers/net/wireless/ipw2x00/
 
 INTEL(R) TRUSTED EXECUTION TECHNOLOGY (TXT)
 M:	Joseph Cihula <joseph.cihula@intel.com>
@@ -5642,7 +5637,7 @@ M:	Ohad Ben-Cohen <ohad@wizery.com>
 S:	Maintained
 F:	drivers/remoteproc/
 F:	Documentation/remoteproc.txt
-F:	include/linux/remoteproc.txt
+F:	include/linux/remoteproc.h
 
 RFKILL
 M:	Johannes Berg <johannes@sipsolutions.net>
@@ -6291,6 +6286,15 @@ F:	drivers/tty/serial/sunsab.h
 F:	drivers/tty/serial/sunsu.c
 F:	drivers/tty/serial/sunzilog.c
 F:	drivers/tty/serial/sunzilog.h
+
+SPARSE CHECKER
+M:	"Christopher Li" <sparse@chrisli.org>
+L:	linux-sparse@vger.kernel.org
+W:	https://sparse.wiki.kernel.org/
+T:	git git://git.kernel.org/pub/scm/devel/sparse/sparse.git
+T:	git git://git.kernel.org/pub/scm/devel/sparse/chrisl/sparse.git
+S:	Maintained
+F:	include/linux/compiler.h
 
 SPEAR PLATFORM SUPPORT
 M:	Viresh Kumar <viresh.kumar@st.com>
