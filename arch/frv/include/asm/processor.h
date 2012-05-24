@@ -103,8 +103,6 @@ do {							\
 	__frame->sp	= (_usp);			\
 } while(0)
 
-extern void prepare_to_copy(struct task_struct *tsk);
-
 /* Free all resources held by a thread. */
 static inline void release_thread(struct task_struct *dead_task)
 {
@@ -134,10 +132,6 @@ unsigned long get_wchan(struct task_struct *p);
 
 #define	KSTK_EIP(tsk)	((tsk)->thread.frame0->pc)
 #define	KSTK_ESP(tsk)	((tsk)->thread.frame0->sp)
-
-/* Allocation and freeing of basic task resources. */
-extern struct task_struct *alloc_task_struct_node(int node);
-extern void free_task_struct(struct task_struct *p);
 
 #define cpu_relax()    barrier()
 

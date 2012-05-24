@@ -583,7 +583,7 @@ void machine_check_poll(enum mcp_flags flags, mce_banks_t *b)
 	struct mce m;
 	int i;
 
-	percpu_inc(mce_poll_count);
+	this_cpu_inc(mce_poll_count);
 
 	mce_gather_info(&m, NULL);
 
@@ -945,9 +945,10 @@ struct mce_info {
 	atomic_t		inuse;
 	struct task_struct	*t;
 	__u64			paddr;
+	int			restartable;
 } mce_info[MCE_INFO_MAX];
 
-static void mce_save_info(__u64 addr)
+static void mce_save_info(__u64 addr, int c)
 {
 	struct mce_info *mi;
 
@@ -955,6 +956,7 @@ static void mce_save_info(__u64 addr)
 		if (atomic_cmpxchg(&mi->inuse, 0, 1) == 0) {
 			mi->t = current;
 			mi->paddr = addr;
+			mi->restartable = c;
 			return;
 		}
 	}
@@ -1015,7 +1017,7 @@ void do_machine_check(struct pt_regs *regs, long error_code)
 
 	atomic_inc(&mce_entry);
 
-	percpu_inc(mce_exception_count);
+	this_cpu_inc(mce_exception_count);
 
 	if (!banks)
 		goto out;
@@ -1130,7 +1132,7 @@ void do_machine_check(struct pt_regs *regs, long error_code)
 			mce_panic("Fatal machine check on current CPU", &m, msg);
 		if (worst == MCE_AR_SEVERITY) {
 			/* schedule action before return to userland */
-			mce_save_info(m.addr);
+			mce_save_info(m.addr, m.mcgstatus & MCG_STATUS_RIPV);
 			set_thread_flag(TIF_MCE_NOTIFY);
 		} else if (kill_it) {
 			force_sig(SIGBUS, current);
@@ -1179,7 +1181,13 @@ void mce_notify_process(void)
 
 	pr_err("Uncorrected hardware memory error in user-access at %llx",
 		 mi->paddr);
-	if (memory_failure(pfn, MCE_VECTOR, MF_ACTION_REQUIRED) < 0) {
+	/*
+	 * We must call memory_failure() here even if the current process is
+	 * doomed. We still need to mark the page as poisoned and alert any
+	 * other users of the page.
+	 */
+	if (memory_failure(pfn, MCE_VECTOR, MF_ACTION_REQUIRED) < 0 ||
+			   mi->restartable == 0) {
 		pr_err("Memory error not recovered");
 		force_sig(SIGBUS, current);
 	}
@@ -1423,6 +1431,43 @@ static int __cpuinit __mcheck_cpu_apply_quirks(struct cpuinfo_x86 *c)
 		 */
 		 if (c->x86 == 6 && banks > 0)
 			mce_banks[0].ctl = 0;
+
+		 /*
+		  * Turn off MC4_MISC thresholding banks on those models since
+		  * they're not supported there.
+		  */
+		 if (c->x86 == 0x15 &&
+		     (c->x86_model >= 0x10 && c->x86_model <= 0x1f)) {
+			 int i;
+			 u64 val, hwcr;
+			 bool need_toggle;
+			 u32 msrs[] = {
+				0x00000413, /* MC4_MISC0 */
+				0xc0000408, /* MC4_MISC1 */
+			 };
+
+			 rdmsrl(MSR_K7_HWCR, hwcr);
+
+			 /* McStatusWrEn has to be set */
+			 need_toggle = !(hwcr & BIT(18));
+
+			 if (need_toggle)
+				 wrmsrl(MSR_K7_HWCR, hwcr | BIT(18));
+
+			 for (i = 0; i < ARRAY_SIZE(msrs); i++) {
+				 rdmsrl(msrs[i], val);
+
+				 /* CntP bit set? */
+				 if (val & BIT(62)) {
+					 val &= ~BIT(62);
+					 wrmsrl(msrs[i], val);
+				 }
+			 }
+
+			 /* restore old settings */
+			 if (need_toggle)
+				 wrmsrl(MSR_K7_HWCR, hwcr);
+		 }
 	}
 
 	if (c->x86_vendor == X86_VENDOR_INTEL) {
